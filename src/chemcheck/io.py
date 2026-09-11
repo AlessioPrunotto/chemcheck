@@ -16,6 +16,11 @@ LABEL_CANDIDATES = ["activity", "label", "target", "value", "pIC50", "pIC50_valu
 
 
 def _rdkit_available() -> bool:
+    """Check whether RDKit can be imported.
+
+    Returns:
+        True if RDKit imports successfully, False otherwise.
+    """
     try:
         import rdkit  # noqa: F401
         return True
@@ -24,6 +29,17 @@ def _rdkit_available() -> bool:
 
 
 def _guess_smiles_column(df: pd.DataFrame) -> str | None:
+    """Guess the SMILES column of a dataframe.
+
+    Checks known candidate names first, then falls back to a
+    SMILES parse-rate heuristic (or first string column without RDKit).
+
+    Args:
+        df: Input dataframe with raw columns.
+
+    Returns:
+        Guessed column name, or None if no suitable column is found.
+    """
     for c in SMILES_CANDIDATES:
         if c in df.columns:
             return c
@@ -51,6 +67,17 @@ def _guess_smiles_column(df: pd.DataFrame) -> str | None:
 
 
 def _read_single(path: str) -> pd.DataFrame:
+    """Read a single dataset file into a dataframe.
+
+    Args:
+        path: Path to a CSV/TSV/TXT/SDF/Parquet/Excel/JSONL/JSON file.
+
+    Returns:
+        Raw dataframe as read from disk.
+
+    Raises:
+        ValueError: If the file extension is unsupported.
+    """
     ext = os.path.splitext(path)[1].lower()
     if ext in (".sdf", ".sd"):
         return _read_sdf(path)
@@ -78,6 +105,17 @@ def _read_single(path: str) -> pd.DataFrame:
 
 
 def _read_sdf(path: str) -> pd.DataFrame:
+    """Read an SDF file into a dataframe with SMILES and properties.
+
+    Args:
+        path: Path to a `.sdf` or `.sd` file.
+
+    Returns:
+        Dataframe with `_sdf_name`, `smiles`, and SDF properties as columns.
+
+    Raises:
+        ImportError: If RDKit is not installed.
+    """
     try:
         from rdkit import Chem
     except Exception as e:
@@ -109,6 +147,27 @@ def _read_sdf(path: str) -> pd.DataFrame:
 def _normalize(df: pd.DataFrame, smiles_col: str | None, id_col: str | None,
                label_col: str | None, split_col: str | None,
                split_value: str | None) -> pd.DataFrame:
+    """Normalize a raw dataframe to chemcheck's internal schema.
+
+    Adds `_row`, `_id`, `_smiles`, `_split`, and `_label` columns and
+    records resolved column names in `df.attrs`.
+
+    Args:
+        df: Raw input dataframe.
+        smiles_col: SMILES column name, or None to auto-detect.
+        id_col: ID column name, or None to auto-detect.
+        label_col: Label column name, or None for unlabeled data.
+        split_col: Split column name, or None for unshuffled data.
+        split_value: Constant split value (e.g. "train") when loading
+            two files, or None for single-file mode.
+
+    Returns:
+        Copy of the dataframe with normalized columns.
+
+    Raises:
+        ValueError: If the SMILES column cannot be resolved, or an
+            explicit id/label/split column is missing.
+    """
     out = df.copy()
     if smiles_col is None:
         smiles_col = _guess_smiles_column(out)
@@ -144,7 +203,22 @@ def _normalize(df: pd.DataFrame, smiles_col: str | None, id_col: str | None,
 def load_table(paths: list[str], smiles_col: str | None = None,
                id_col: str | None = None, label_col: str | None = None,
                split_col: str | None = None) -> pd.DataFrame:
-    """Load one file, or two files as train/test splits."""
+    """Load one file, or two files as train/test splits.
+
+    Args:
+        paths: One dataset path, or two paths treated as train/test.
+        smiles_col: SMILES column name, or None to auto-detect.
+        id_col: ID column name, or None to auto-detect.
+        label_col: Label column name, or None for unlabeled data.
+        split_col: Split column name, or None to auto-detect (single-file
+            mode only; two-file mode synthesizes train/test labels).
+
+    Returns:
+        Normalized dataframe (see `_normalize`).
+
+    Raises:
+        ValueError: If the number of paths is not 1 or 2.
+    """
     if len(paths) == 1:
         df = _read_single(paths[0])
         # autodetect split col if not given

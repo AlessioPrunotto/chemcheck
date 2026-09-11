@@ -6,19 +6,36 @@ near-dup across splits, and suspiciously-easy-split heuristics.
 from __future__ import annotations
 
 from collections import defaultdict
+from typing import TYPE_CHECKING, Any
 
 from ..models import Finding, Severity
+
+if TYPE_CHECKING:
+    from ..molecules import MoleculeRecord
 
 MAX_ROWS = 500
 
 
-def _split_groups(records):
+def _split_groups(records: list[MoleculeRecord]) -> tuple[list[MoleculeRecord], list[MoleculeRecord]]:
+    """Split valid records into train and test/validation groups.
+
+    Args:
+        records: Per-molecule records.
+
+    Returns:
+        Tuple of (train records, test/validation records).
+    """
     tr = [r for r in records if r.valid and (r.split or "").lower() == "train"]
     te = [r for r in records if r.valid and (r.split or "").lower() in ("test", "valid", "validation")]
     return tr, te
 
 
-def _no_split_info():
+def _no_split_info() -> Finding:
+    """Build the informational finding used when split checks are skipped.
+
+    Returns:
+        Finding explaining how to enable leakage checks.
+    """
     return Finding(check_id="split_info", severity=Severity.INFO,
                    title="no split information", count=0, rate=0.0,
                    affected_rows=[], total_affected=0, examples=[],
@@ -26,7 +43,16 @@ def _no_split_info():
                    details="Split/leakage checks skipped.")
 
 
-def check_scaffold_overlap(records, ctx):
+def check_scaffold_overlap(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag test molecules whose scaffold was seen in train.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for scaffold overlap, or None if no split or no overlap.
+    """
     tr, te = _split_groups(records)
     if not tr or not te:
         return None
@@ -47,7 +73,16 @@ def check_scaffold_overlap(records, ctx):
                    details=f"{len(overlap_rows)}/{len(te)} test molecules share a Bemis–Murcko scaffold with train.")
 
 
-def check_identity_leakage(records, ctx):
+def check_identity_leakage(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag test molecules identical (connectivity) to train molecules.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Error finding for 2D-identity leakage, or None if none found.
+    """
     tr, te = _split_groups(records)
     if not tr or not te:
         return None
@@ -75,7 +110,31 @@ def check_identity_leakage(records, ctx):
                    details="Stereo-agnostic match (connectivity SMILES) across train/test.")
 
 
-def _cross_similarities(tr, te, thresh, cap_pairs=3000, max_test=3000):
+def _cross_similarities(
+    tr: list[MoleculeRecord],
+    te: list[MoleculeRecord],
+    thresh: float,
+    cap_pairs: int = 3000,
+    max_test: int = 3000,
+) -> tuple[
+    list[tuple[MoleculeRecord, MoleculeRecord, float]],
+    list[tuple[MoleculeRecord, float, MoleculeRecord | None]],
+    int,
+    int,
+]:
+    """Compute cross-split Tanimoto similarities.
+
+    Args:
+        tr: Train records with fingerprints.
+        te: Test records with fingerprints.
+        thresh: Similarity threshold for reporting a pair.
+        cap_pairs: Maximum pairs to return.
+        max_test: Maximum test molecules to score (sampled if larger).
+
+    Returns:
+        Tuple of (pairs above threshold, per-test max similarities,
+        number of test molecules scored, total test molecules).
+    """
     from rdkit import DataStructs
     te_use = te if len(te) <= max_test else te[:: max(1, len(te) // max_test)][:max_test]
     tr_fps = [r.fp for r in tr]
@@ -96,7 +155,17 @@ def _cross_similarities(tr, te, thresh, cap_pairs=3000, max_test=3000):
     return pairs[:cap_pairs], per_test_max, len(te_use), len(te)
 
 
-def check_analog_leakage(records, ctx):
+def check_analog_leakage(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag test molecules with a close analog in train.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples` and optional
+            `analog_thresh`.
+
+    Returns:
+        Finding for analog leakage, or None if no split or no pairs.
+    """
     tr, te = _split_groups(records)
     if not tr or not te or not any(r.fp is not None for r in tr):
         return None
@@ -130,7 +199,17 @@ def check_analog_leakage(records, ctx):
                    details=f"ECFP4/Morgan Tc≥{thresh} cross-split pairs: {len(pairs)} enumerated (capped).")
 
 
-def check_cross_near_duplicates(records, ctx):
+def check_cross_near_duplicates(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag near-duplicate pairs spanning train and test.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples` and optional
+            `near_dup_thresh`.
+
+    Returns:
+        Error finding for cross-split near-duplicates, or None if none found.
+    """
     tr, te = _split_groups(records)
     if not tr or not te:
         return None
@@ -153,7 +232,16 @@ def check_cross_near_duplicates(records, ctx):
                    details=f"{len(pairs)} cross-split pairs above threshold.")
 
 
-def check_easy_split(records, ctx):
+def check_easy_split(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag splits where test molecules are unusually close to train.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for suspiciously easy splits, or None if the split looks hard.
+    """
     tr, te = _split_groups(records)
     if not tr or not te:
         return None
@@ -181,7 +269,15 @@ def check_easy_split(records, ctx):
                    details=f"mean={mean:.2f} median={med:.2f} over {len(sims)} test molecules.")
 
 
-def _has_any_split(records) -> bool:
+def _has_any_split(records: list[MoleculeRecord]) -> bool:
+    """Check whether any record carries split information.
+
+    Args:
+        records: Per-molecule records.
+
+    Returns:
+        True if at least one record has a non-empty split label.
+    """
     return any((r.split or "") != "" and r.split is not None for r in records)
 
 

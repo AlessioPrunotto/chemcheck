@@ -15,11 +15,9 @@ chemcheck dataset.sdf --split-col split --fail-on error
 ```
 
 It reports valid molecules, duplicates, stereochemical collisions, salt/tautomer
-ambiguity, split leakage, target shift, and chemical-space bias — every warning
-with row IDs, evidence, and an actionable recommendation — plus a 0–100 dataset
-quality score.
-
-Built **above RDKit** (uses RDKit, doesn't compete with it).
+ambiguity, split leakage, target shift, and chemical-space bias.
+Every warning comes with row IDs, evidence, and an actionable recommendation, plus
+a 0–100 dataset quality score.
 
 ## Install
 

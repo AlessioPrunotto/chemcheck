@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import math
+from typing import Any
+
+from .models import Finding
 
 WEIGHTS = {
     # chemical integrity
@@ -43,17 +46,34 @@ WEIGHTS = {
 
 
 def _factor(rate: float, count: int) -> float:
-    """Map prevalence rate → [0,1] deduction factor.
+    """Map prevalence rate to a [0, 1] deduction factor.
 
     Saturating curve: even small counts deduct something, large rates cap out.
     factor = 1 - exp(-(rate*12 + (0.15 if count>0 else 0)))
+
+    Args:
+        rate: Fraction of rows affected.
+        count: Number of affected rows.
+
+    Returns:
+        Deduction factor between 0.0 and 1.0.
     """
     if count <= 0:
         return 0.0
     return 1.0 - math.exp(-(rate * 12.0 + 0.15))
 
 
-def score_findings(findings, n_total: int):
+def score_findings(findings: list[Finding], n_total: int) -> tuple[int, list[dict[str, Any]]]:
+    """Score findings with transparent weighted deductions.
+
+    Args:
+        findings: Findings to score (`split_info` is skipped).
+        n_total: Total number of records (unused beyond signature symmetry).
+
+    Returns:
+        Tuple of (score from 0 to 100, per-check deduction breakdown
+        sorted by deduction descending).
+    """
     breakdown = []
     total_deduction = 0.0
     for f in findings:

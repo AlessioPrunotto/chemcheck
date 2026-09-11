@@ -5,9 +5,18 @@ One pass over the table builds MoleculeRecord objects reused by all checks.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 
-def _require_rdkit():
+def _require_rdkit() -> None:
+    """Ensure RDKit is importable.
+
+    Raises:
+        ImportError: If RDKit is not installed.
+    """
     try:
         from rdkit import Chem  # noqa: F401
     except Exception as e:
@@ -19,12 +28,44 @@ def _require_rdkit():
 
 @dataclass
 class MoleculeRecord:
+    """Per-molecule parsed record reused by all checks.
+
+    Attributes:
+        idx: Original integer row index (`_row`).
+        row_id: Stable string row identifier (`_id`).
+        raw_smiles: Raw input SMILES string.
+        split: Split label (e.g. train/test) or None.
+        label: Raw label value, if any.
+        mol: RDKit Mol object or None when invalid.
+        valid: Whether the molecule sanitized successfully.
+        sanitize_error: Sanitization error message when invalid.
+        canon_smi: Isomeric canonical SMILES.
+        connectivity_smi: Non-isomeric (stereo-agnostic) SMILES.
+        parent_smi: Desalted parent isomeric SMILES.
+        parent_connectivity: Desalted parent non-isomeric SMILES.
+        tautomer_smi: Canonical tautomer SMILES.
+        scaffold: Bemis-Murcko scaffold SMILES or placeholder.
+        fp: Morgan fingerprint bit vector or None.
+        mw: Molecular weight.
+        logp: Calculated LogP.
+        n_atoms: Number of atoms.
+        formal_charge: Formal charge of the molecule.
+        n_fragments: Number of disconnected fragments.
+        elements: Set of element symbols present.
+        has_isotope: Whether any atom is isotopically labeled.
+        has_radical: Whether any atom has radical electrons.
+        n_stereo_defined: Number of assigned stereocenters.
+        n_stereo_unassigned: Number of unassigned stereocenters.
+        n_tautomers: Number of enumerated tautomers.
+        max_ring_size: Size of the largest ring.
+    """
+
     idx: int
     row_id: str
     raw_smiles: str
     split: str | None
-    label: object
-    mol: object = None  # RDKit Mol or None
+    label: Any
+    mol: Any = None  # RDKit Mol or None
     valid: bool = False
     sanitize_error: str = ""
     canon_smi: str | None = None          # isomeric canonical
@@ -33,13 +74,13 @@ class MoleculeRecord:
     parent_connectivity: str | None = None
     tautomer_smi: str | None = None
     scaffold: str | None = None
-    fp: object = None
+    fp: Any = None
     mw: float | None = None
     logp: float | None = None
     n_atoms: int = 0
     formal_charge: int = 0
     n_fragments: int = 0
-    elements: set = field(default_factory=set)
+    elements: set[str] = field(default_factory=set)
     has_isotope: bool = False
     has_radical: bool = False
     n_stereo_defined: int = 0
@@ -49,6 +90,14 @@ class MoleculeRecord:
 
 
 def _classify_sanitize_error(msg: str) -> str:
+    """Classify an RDKit sanitization error message.
+
+    Args:
+        msg: Raw exception message from RDKit sanitization.
+
+    Returns:
+        One of "valence", "aromaticity", "charge", or "other".
+    """
     m = (msg or "").lower()
     if "valence" in m or "explicit valence" in m:
         return "valence"
@@ -59,7 +108,24 @@ def _classify_sanitize_error(msg: str) -> str:
     return "other"
 
 
-def build_records(df) -> list[MoleculeRecord]:
+def build_records(df: pd.DataFrame) -> list[MoleculeRecord]:
+    """Build per-molecule records for a normalized table.
+
+    Parses SMILES, sanitizes with RDKit, and caches derived
+    properties (canonical forms, scaffold, fingerprint, descriptors)
+    reused by all checks. Never raises on bad rows; they are marked
+    invalid instead.
+
+    Args:
+        df: Normalized table with `_row`, `_id`, `_smiles`, `_split`,
+            and `_label` columns (see `chemcheck.io._normalize`).
+
+    Returns:
+        List of molecule records, one per input row.
+
+    Raises:
+        ImportError: If RDKit is not installed.
+    """
     _require_rdkit()
     from rdkit import Chem, RDLogger
     from rdkit.Chem import Descriptors, SaltRemover

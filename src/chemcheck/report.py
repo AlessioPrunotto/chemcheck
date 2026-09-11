@@ -4,6 +4,7 @@ from __future__ import annotations
 import html
 import json
 from datetime import datetime, timezone
+from typing import Any
 
 from .checks import run_all
 from .io import load_table
@@ -12,9 +13,28 @@ from .molecules import build_records
 from .scoring import score_findings
 
 
-def audit(paths, smiles_col=None, id_col=None, label_col=None, split_col=None,
+def audit(paths: list[str], smiles_col: str | None = None, id_col: str | None = None,
+          label_col: str | None = None, split_col: str | None = None,
           max_examples: int = 20, near_dup_thresh: float = 0.95,
           analog_thresh: float = 0.6) -> AuditReport:
+    """Audit a molecular dataset and return a quality report.
+
+    Loads input file(s), builds molecule records, runs all checks,
+    scores findings, and assembles report metadata.
+
+    Args:
+        paths: One dataset path, or two paths treated as train/test.
+        smiles_col: SMILES column name, or None to auto-detect.
+        id_col: ID column name, or None to auto-detect.
+        label_col: Label column name, or None for unlabeled data.
+        split_col: Split column name, or None to auto-detect.
+        max_examples: Maximum examples stored per finding.
+        near_dup_thresh: Tanimoto threshold for near-duplicates.
+        analog_thresh: Tanimoto threshold for analog leakage.
+
+    Returns:
+        Populated audit report with findings ordered by severity.
+    """
     df = load_table(paths, smiles_col, id_col, label_col, split_col)
     records = build_records(df)
     n_total = len(records)
@@ -42,10 +62,26 @@ def audit(paths, smiles_col=None, id_col=None, label_col=None, split_col=None,
 # ---------- reporters ----------
 
 def _icon(sev: Severity) -> str:
+    """Return a glyph for a severity level.
+
+    Args:
+        sev: Severity to render.
+
+    Returns:
+        Unicode icon string.
+    """
     return {"error": "✕", "warning": "⚠", "info": "ℹ"}[sev.value]
 
 
-def to_dict(report: AuditReport) -> dict:
+def to_dict(report: AuditReport) -> dict[str, Any]:
+    """Convert a report to a JSON-serializable dictionary.
+
+    Args:
+        report: Audit report to serialize.
+
+    Returns:
+        Dictionary with meta, summary, score breakdown, and findings.
+    """
     return {
         "meta": report.meta,
         "summary": {"n_total": report.n_total, "n_valid": report.n_valid,
@@ -62,6 +98,14 @@ def to_dict(report: AuditReport) -> dict:
 
 
 def render_terminal(report: AuditReport) -> str:
+    """Render a report as plain-text terminal output.
+
+    Args:
+        report: Audit report to render.
+
+    Returns:
+        Multi-line human-readable report string.
+    """
     L = []
     L.append("")
     L.append(f"✓ {report.n_valid:,} valid molecules / ✕ {report.n_invalid:,} invalid "
@@ -91,10 +135,26 @@ def render_terminal(report: AuditReport) -> str:
 
 
 def render_json(report: AuditReport) -> str:
+    """Render a report as indented JSON.
+
+    Args:
+        report: Audit report to render.
+
+    Returns:
+        JSON string of `to_dict(report)`.
+    """
     return json.dumps(to_dict(report), indent=2)
 
 
 def render_html(report: AuditReport) -> str:
+    """Render a report as a standalone HTML page.
+
+    Args:
+        report: Audit report to render.
+
+    Returns:
+        HTML document string.
+    """
     rows = "\n".join(
         f"<tr><td>{_icon(f.severity)} {f.severity.value}</td><td>{html.escape(f.title)}</td>"
         f"<td>{f.count}</td><td>{html.escape(f.recommendation[:300])}</td>"
@@ -111,6 +171,14 @@ td,th{{border:1px solid #ccc;padding:6px;vertical-align:top}}pre{{white-space:pr
 
 
 def render_junit(report: AuditReport) -> str:
+    """Render a report as JUnit XML for CI integration.
+
+    Args:
+        report: Audit report to render.
+
+    Returns:
+        JUnit XML string with one testcase per finding.
+    """
     cases = []
     for f in report.findings:
         status = "failed" if f.severity == Severity.ERROR else "warning"

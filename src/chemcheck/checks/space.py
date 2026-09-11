@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 from collections import Counter
+from typing import TYPE_CHECKING, Any
 
 from ..models import Finding, Severity
+
+if TYPE_CHECKING:
+    from ..molecules import MoleculeRecord
 
 MAX_ROWS = 500
 COMMON_ELEMENTS = {"H", "C", "N", "O", "F", "P", "S", "Cl", "Br", "I"}
@@ -31,7 +35,16 @@ PAINS_LIKE = [
 ]
 
 
-def check_rare_elements(records, ctx):
+def check_rare_elements(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag molecules containing elements outside the common organic set.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Informational finding for rare elements, or None if none found.
+    """
     bad = [r for r in records if r.valid and (r.elements - COMMON_ELEMENTS)]
     if not bad:
         return None
@@ -48,7 +61,16 @@ def check_rare_elements(records, ctx):
                    details="")
 
 
-def check_functional_groups(records, ctx):
+def check_functional_groups(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag rare (<0.5%) or PAINS-like functional groups.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Informational finding for functional groups, or None if none flagged.
+    """
     try:
         from rdkit import Chem
     except Exception:
@@ -81,7 +103,16 @@ def check_functional_groups(records, ctx):
                    details=f"Prevalence among valid: {prev}.")
 
 
-def check_ring_systems(records, ctx):
+def check_ring_systems(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag macrocycles and singleton scaffolds.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context (unused beyond record access).
+
+    Returns:
+        Finding for unusual ring systems, or None if none found.
+    """
     valid = [r for r in records if r.valid]
     macro = [r.row_id for r in valid if r.max_ring_size >= 8]
     scaf_counts = Counter(r.scaffold for r in valid if r.scaffold)
@@ -108,7 +139,16 @@ def check_ring_systems(records, ctx):
                    details=f"{singletons} singleton scaffolds; {len(macro)} macrocycles.")
 
 
-def check_representation_bias(records, ctx):
+def check_representation_bias(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag datasets dominated by a few scaffolds.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context (unused beyond record access).
+
+    Returns:
+        Finding when top-5 scaffolds cover >=30% of data, else None.
+    """
     valid = [r for r in records if r.valid and r.scaffold]
     if len(valid) < 30:
         return None
@@ -129,7 +169,16 @@ def check_representation_bias(records, ctx):
                    details="")
 
 
-def check_applicability_gaps(records, ctx):
+def check_applicability_gaps(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag molecules isolated in chemical space (nearest-neighbor Tc < 0.3).
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Informational finding for isolated molecules, or None if none found.
+    """
     from rdkit import DataStructs
     valid = [r for r in records if r.valid and r.fp is not None]
     n = len(valid)

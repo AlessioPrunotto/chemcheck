@@ -3,11 +3,21 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from .report import audit, render_html, render_json, render_junit, render_terminal
 
+if TYPE_CHECKING:
+    from .models import AuditReport
+
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the chemcheck argument parser.
+
+    Returns:
+        Configured argument parser for the CLI.
+    """
     p = argparse.ArgumentParser(
         prog="chemcheck",
         description="pytest for molecular datasets — sanity checks for chemistry ML datasets.")
@@ -30,7 +40,17 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def exit_code_for(report, fail_on: str) -> int:
+def exit_code_for(report: AuditReport, fail_on: str) -> int:
+    """Map report findings to a pytest-like exit code.
+
+    Args:
+        report: Audit report to evaluate.
+        fail_on: Minimum severity triggering nonzero exit
+            ("error", "warning", "info", or "never").
+
+    Returns:
+        0 for pass, 1 for warnings, 2 for errors.
+    """
     levels = {"never": 99, "info": 0, "warning": 1, "error": 2}
     threshold = levels[fail_on]
     if threshold == 99:
@@ -44,7 +64,16 @@ def exit_code_for(report, fail_on: str) -> int:
     return 2 if worst == 2 else 1
 
 
-def main(argv=None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
+    """Run the chemcheck CLI.
+
+    Args:
+        argv: Argument list excluding the program name, or None to use
+            `sys.argv`.
+
+    Returns:
+        Process exit code (0 pass, 1 warnings, 2 errors).
+    """
     args = build_parser().parse_args(argv)
     try:
         report = audit(args.inputs, smiles_col=args.smiles_col, id_col=args.id_col,

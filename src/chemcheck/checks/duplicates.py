@@ -2,13 +2,41 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from typing import TYPE_CHECKING, Any
 
 from ..models import Finding, Severity
+
+if TYPE_CHECKING:
+    from ..molecules import MoleculeRecord
 
 MAX_ROWS = 500
 
 
-def _group_finding(check_id, severity, title, groups: dict, n_total, max_examples, rec, details=""):
+def _group_finding(
+    check_id: str,
+    severity: Severity,
+    title: str,
+    groups: dict[Any, list[str]],
+    n_total: int,
+    max_examples: int,
+    rec: str,
+    details: str = "",
+) -> Finding | None:
+    """Build a finding from key-to-rows groups, keeping groups of size > 1.
+
+    Args:
+        check_id: Stable machine-readable check identifier.
+        severity: Severity level for the finding.
+        title: Short human-readable title.
+        groups: Mapping of group key to row ids.
+        n_total: Total number of records (for rate computation).
+        max_examples: Maximum example groups to include.
+        rec: Remediation recommendation.
+        details: Extra details; defaults to a group count summary.
+
+    Returns:
+        A finding, or None if no duplicate groups exist.
+    """
     # groups: key -> list[row_id]; keep only len>1
     dup_groups = {k: v for k, v in groups.items() if len(v) > 1}
     if not dup_groups:
@@ -23,7 +51,16 @@ def _group_finding(check_id, severity, title, groups: dict, n_total, max_example
                    details=details or f"{len(dup_groups)} duplicate groups.")
 
 
-def check_exact_duplicates(records, ctx):
+def check_exact_duplicates(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag rows with identical raw SMILES strings.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for exact duplicate rows, or None if none found.
+    """
     g = defaultdict(list)
     for r in records:
         g[r.raw_smiles.strip()].append(r.row_id)
@@ -32,7 +69,16 @@ def check_exact_duplicates(records, ctx):
                           "Deduplicate raw SMILES first — exact dups inflate N and leak across random splits.")
 
 
-def check_canonical_duplicates(records, ctx):
+def check_canonical_duplicates(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag distinct rows sharing one canonical isomeric SMILES.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for canonical duplicates, or None if none found.
+    """
     g = defaultdict(list)
     for r in records:
         if r.valid and r.canon_smi:
@@ -43,7 +89,16 @@ def check_canonical_duplicates(records, ctx):
                           "Deduplicate on canonical isomeric SMILES; keep one row per structure (aggregate labels).")
 
 
-def check_stereo_collisions(records, ctx):
+def check_stereo_collisions(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag connectivity groups with multiple distinct stereoisomers.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for stereochemical collisions, or None if none found.
+    """
     g = defaultdict(set)   # connectivity -> set of distinct isomeric smi
     members = defaultdict(list)
     for r in records:
@@ -67,7 +122,16 @@ def check_stereo_collisions(records, ctx):
                    details=f"{len(colliding)} connectivity groups with >1 stereoisomer.")
 
 
-def check_salt_duplicates(records, ctx):
+def check_salt_duplicates(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag parent structures appearing in multiple salt/solvate forms.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for inconsistent salt representation, or None if none found.
+    """
     g = defaultdict(list)
     for r in records:
         if r.valid and r.parent_smi:
@@ -93,7 +157,16 @@ def check_salt_duplicates(records, ctx):
                    details=f"{len(salt_groups)} parent structures with multiple salt/solvate forms.")
 
 
-def check_tautomer_duplicates(records, ctx):
+def check_tautomer_duplicates(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag canonical-tautomer groups with multiple input representations.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Informational finding for tautomer duplicates, or None if none found.
+    """
     g = defaultdict(list)
     for r in records:
         if r.valid and r.tautomer_smi:
@@ -118,18 +191,39 @@ def check_tautomer_duplicates(records, ctx):
                    details=f"{len(tg)} tautomer groups with multiple input forms.")
 
 
-def _valid_with_fp(records):
+def _valid_with_fp(records: list[MoleculeRecord]) -> list[MoleculeRecord]:
+    """Return valid records that have a fingerprint.
+
+    Args:
+        records: Per-molecule records.
+
+    Returns:
+        Filtered list of records with fingerprints.
+    """
     return [r for r in records if r.valid and r.fp is not None]
 
 
-def check_near_duplicates(records, ctx):
+def check_near_duplicates(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag pairs with Morgan Tanimoto similarity above threshold.
+
+    Uses full comparison for small sets and a popcount-windowed
+    approximation for large sets.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples` and optional
+            `near_dup_thresh`.
+
+    Returns:
+        Finding for near-duplicates, or None if none found.
+    """
     from rdkit import DataStructs
     thresh = float(ctx.get("near_dup_thresh", 0.95))
     valid = _valid_with_fp(records)
     n = len(valid)
     if n < 2:
         return None
-    pairs: list[tuple] = []
+    pairs: list[tuple[str, str, float]] = []
     # Full comparison for small sets; popcount-windowed for large sets (thin but scalable).
     if n <= 4000:
         fps = [r.fp for r in valid]

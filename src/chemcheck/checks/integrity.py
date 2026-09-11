@@ -1,12 +1,41 @@
 """Chemical-integrity checks (per-molecule chemistry validity)."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from ..models import Finding, Severity
+
+if TYPE_CHECKING:
+    from ..molecules import MoleculeRecord
 
 MAX_ROWS = 200
 
 
-def _mk(check_id, severity, title, rows, examples, rec, n_total, details=""):
+def _mk(
+    check_id: str,
+    severity: Severity,
+    title: str,
+    rows: list[str],
+    examples: list[dict[str, Any]],
+    rec: str,
+    n_total: int,
+    details: str = "",
+) -> Finding | None:
+    """Build a finding, or None when no rows are affected.
+
+    Args:
+        check_id: Stable machine-readable check identifier.
+        severity: Severity level for the finding.
+        title: Short human-readable title.
+        rows: Affected row ids.
+        examples: Example payloads illustrating the issue.
+        rec: Remediation recommendation.
+        n_total: Total number of records (for rate computation).
+        details: Extra details about the finding.
+
+    Returns:
+        A finding, or None if `rows` is empty.
+    """
     if not rows:
         return None
     return Finding(check_id=check_id, severity=severity, title=title,
@@ -15,7 +44,16 @@ def _mk(check_id, severity, title, rows, examples, rec, n_total, details=""):
                    examples=examples, recommendation=rec, details=details)
 
 
-def check_invalid_smiles(records, ctx):
+def check_invalid_smiles(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag rows that failed RDKit parsing/sanitization.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for invalid SMILES, or None if all rows are valid.
+    """
     rows = [r.row_id for r in records if not r.valid]
     ex = [{"row": r.row_id, "smiles": r.raw_smiles[:80], "error": r.sanitize_error[:160]}
           for r in records if not r.valid][:ctx["max_examples"]]
@@ -24,7 +62,16 @@ def check_invalid_smiles(records, ctx):
                len(records))
 
 
-def check_valence(records, ctx):
+def check_valence(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag invalid rows whose error mentions valence.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for impossible valence states, or None if none found.
+    """
     rows = [r.row_id for r in records if not r.valid and "valence" in (r.sanitize_error or "").lower()]
     ex = [{"row": r.row_id, "smiles": r.raw_smiles[:80], "error": r.sanitize_error[:160]}
           for r in records if r.row_id in set(rows)][:ctx["max_examples"]]
@@ -33,7 +80,16 @@ def check_valence(records, ctx):
                len(records))
 
 
-def check_aromaticity(records, ctx):
+def check_aromaticity(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag invalid rows with kekulization/aromaticity errors.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for aromaticity inconsistencies, or None if none found.
+    """
     rows = [r.row_id for r in records
             if not r.valid and ("kekul" in (r.sanitize_error or "").lower()
                                 or "aromat" in (r.sanitize_error or "").lower())]
@@ -44,7 +100,19 @@ def check_aromaticity(records, ctx):
                len(records))
 
 
-def check_impossible_charge(records, ctx):
+def check_impossible_charge(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag valid molecules with suspicious formal charges.
+
+    Flags molecules with |formal charge| > 4 or carbon atoms with
+    |charge| > 1.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for suspicious charges, or None if none found.
+    """
     bad = []
     for r in records:
         if not r.valid:
@@ -67,7 +135,16 @@ def check_impossible_charge(records, ctx):
                len(records))
 
 
-def check_disconnected(records, ctx):
+def check_disconnected(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag valid molecules with multiple disconnected fragments.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for salts/mixtures, or None if none found.
+    """
     bad = [r for r in records if r.valid and r.n_fragments > 1]
     rows = [r.row_id for r in bad]
     ex = [{"row": r.row_id, "smiles": r.canon_smi, "n_fragments": r.n_fragments} for r in bad][:ctx["max_examples"]]
@@ -77,7 +154,16 @@ def check_disconnected(records, ctx):
                len(records))
 
 
-def check_isotopes(records, ctx):
+def check_isotopes(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag valid molecules containing isotopically labeled atoms.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Informational finding for isotopes, or None if none found.
+    """
     bad = [r for r in records if r.valid and r.has_isotope]
     rows = [r.row_id for r in bad]
     ex = [{"row": r.row_id, "smiles": r.canon_smi} for r in bad][:ctx["max_examples"]]
@@ -86,7 +172,16 @@ def check_isotopes(records, ctx):
                len(records))
 
 
-def check_radicals(records, ctx):
+def check_radicals(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag valid molecules with radical electrons.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for radicals, or None if none found.
+    """
     bad = [r for r in records if r.valid and r.has_radical]
     rows = [r.row_id for r in bad]
     ex = [{"row": r.row_id, "smiles": r.canon_smi} for r in bad][:ctx["max_examples"]]
@@ -95,7 +190,16 @@ def check_radicals(records, ctx):
                len(records))
 
 
-def check_unspecified_stereo(records, ctx):
+def check_unspecified_stereo(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag valid molecules with unassigned tetrahedral centers.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for unspecified stereocenters, or None if none found.
+    """
     bad = [r for r in records if r.valid and r.n_stereo_unassigned > 0]
     rows = [r.row_id for r in bad]
     ex = [{"row": r.row_id, "smiles": r.canon_smi,
@@ -109,7 +213,16 @@ def check_unspecified_stereo(records, ctx):
     return f
 
 
-def check_tautomer_ambiguity(records, ctx):
+def check_tautomer_ambiguity(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag valid molecules with multiple enumerable tautomers.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Informational finding for tautomer ambiguity, or None if none found.
+    """
     bad = [r for r in records if r.valid and (r.n_tautomers or 1) > 1]
     rows = [r.row_id for r in bad]
     ex = [{"row": r.row_id, "smiles": r.canon_smi, "n_tautomers": r.n_tautomers,

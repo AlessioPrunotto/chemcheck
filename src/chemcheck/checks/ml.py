@@ -2,18 +2,39 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
 
 from ..models import Finding, Severity
+
+if TYPE_CHECKING:
+    from ..molecules import MoleculeRecord
 
 MAX_ROWS = 500
 
 
-def _labels(records):
+def _labels(records: list[MoleculeRecord]) -> list[tuple[MoleculeRecord, Any]]:
+    """Collect (record, label) pairs for labeled valid records.
+
+    Args:
+        records: Per-molecule records.
+
+    Returns:
+        List of record/label tuples, excluding missing labels.
+    """
     return [(r, r.label) for r in records if r.valid and r.label is not None
             and str(r.label) not in ("", "nan", "None")]
 
 
-def _is_numeric(vals) -> bool:
+def _is_numeric(vals: Sequence[Any]) -> bool:
+    """Check whether all values can be coerced to float.
+
+    Args:
+        vals: Candidate label values.
+
+    Returns:
+        True if every value converts to float, False otherwise.
+    """
     try:
         [float(v) for v in vals]
         return True
@@ -21,7 +42,16 @@ def _is_numeric(vals) -> bool:
         return False
 
 
-def check_duplicated_measurements(records, ctx):
+def check_duplicated_measurements(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag repeated (structure, label) measurements.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for duplicated measurements, or None if none found.
+    """
     g = defaultdict(list)
     for r in records:
         if r.valid and r.canon_smi and r.label is not None and str(r.label) != "nan":
@@ -42,7 +72,19 @@ def check_duplicated_measurements(records, ctx):
                    details=f"{len(dups)} (structure, label) groups repeated.")
 
 
-def check_conflicting_measurements(records, ctx):
+def check_conflicting_measurements(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag structures with incompatible labels.
+
+    Numeric labels conflict when the range exceeds 1.0; categorical
+    labels conflict on any mismatch.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Error finding for conflicting measurements, or None if none found.
+    """
     g = defaultdict(list)
     for r in records:
         if r.valid and r.canon_smi and r.label is not None and str(r.label) not in ("", "nan", "None"):
@@ -78,7 +120,19 @@ def check_conflicting_measurements(records, ctx):
                    details=f"{len(conflicts)} structures with incompatible labels.")
 
 
-def check_target_shift(records, ctx):
+def check_target_shift(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag label distribution shifts between train and test.
+
+    Uses a KS test plus Cohen's d for numeric labels, and max
+    prevalence delta for categorical labels.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Finding for target shift, or None if splits match or data is sparse.
+    """
     tr = [r for r in records if r.valid and (r.split or "").lower() == "train"]
     te = [r for r in records if r.valid and (r.split or "").lower() in ("test", "valid", "validation")]
     if not tr or not te:
@@ -132,7 +186,16 @@ def check_target_shift(records, ctx):
                    details="")
 
 
-def check_outliers(records, ctx):
+def check_outliers(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag numeric labels more than 4 standard deviations from the mean.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context with `max_examples`.
+
+    Returns:
+        Informational finding for label outliers, or None if none found.
+    """
     lab = _labels(records)
     if len(lab) < 10:
         return None
@@ -156,7 +219,19 @@ def check_outliers(records, ctx):
                    details=f"mean={mu:.3f} sd={sd:.3f}.")
 
 
-def check_split_label_leakage(records, ctx):
+def check_split_label_leakage(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
+    """Flag cases where split membership predicts the label.
+
+    A large train/test label gap (Cohen's d >= 0.8) suggests
+    provenance or target leakage.
+
+    Args:
+        records: Per-molecule records.
+        ctx: Check context (unused beyond split/label access).
+
+    Returns:
+        Finding for split-label leakage, or None if no strong gap exists.
+    """
     # thin "target leakage": does split membership predict the label?
     tr = [r for r in records if r.valid and (r.split or "").lower() == "train"]
     te = [r for r in records if r.valid and (r.split or "").lower() in ("test", "valid", "validation")]
