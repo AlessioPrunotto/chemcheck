@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chemcheck"
+version = "0.1.0"
+description = "pytest for molecular datasets — sanity checks for chemistry ML datasets"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "rdkit",
+  "pandas",
+  "numpy",
+  "scipy",
+  "scikit-learn",
+  "pyarrow",
+  "openpyxl",
+]
+
+[project.optional-dependencies]
+pretty = ["rich"]
+dev = ["pytest"]
+notebooks = ["jupyter", "nbformat", "nbclient", "ipykernel"]
+
+[project.scripts]
+chemcheck = "chemcheck.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100

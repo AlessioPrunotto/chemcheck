@@ -1,0 +1,6 @@
+id,smiles,activity
+t01,CC(C)Cc1ccc(C(C)C(=O)O)cc1,5.2
+t02,CCO,1.0
+t03,CC(=O)c1ccccc1,4.2
+t04,C1CCCCC1N,2.2
+t05,c1ccc2ncncc2c1,3.3

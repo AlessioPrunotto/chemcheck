@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+title: "chemcheck: pytest for molecular datasets"
+message: "If you use chemcheck in your research, please cite it as below."
+type: software
+authors:
+  - family-names: Prunotto
+    given-names: Alessio
+    orcid: "https://orcid.org/0000-0002-6425-964X"
+repository-code: "https://github.com/AlessioPrunotto/chemcheck"
+license: MIT
+version: 0.1.0
+keywords:
+  - cheminformatics
+  - molecular machine learning
+  - dataset quality
+  - data leakage
+  - RDKit

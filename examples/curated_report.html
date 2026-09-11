@@ -1,0 +1,111 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>chemcheck report — score 80/100</title>
+<style>body{font-family:system-ui,sans-serif;margin:2em}table{border-collapse:collapse;width:100%}
+td,th{border:1px solid #ccc;padding:6px;vertical-align:top}pre{white-space:pre-wrap}</style>
+</head><body><h1>chemcheck report — score 80/100</h1>
+<p>12/12 valid molecules. Source: curated.csv</p>
+<table><tr><th>severity</th><th>finding</th><th>n</th><th>recommendation</th><th>examples</th></tr>
+<tr><td>⚠ warning</td><td>radical electrons present</td><td>2</td><td>Radicals are rarely valid training data for property models; verify or remove.</td><td><pre>[
+ {
+  &quot;row&quot;: &quot;d13&quot;,
+  &quot;smiles&quot;: &quot;C[13C]&quot;
+ },
+ {
+  &quot;row&quot;: &quot;d10&quot;,
+  &quot;smiles&quot;: &quot;[C-2]&quot;
+ }
+]</pre></td></tr>
+<tr><td>⚠ warning</td><td>molecules with unspecified stereocenters</td><td>2</td><td>Assign stereochemistry where known; otherwise record that stereo is unknown and use stereo-agnostic evaluation to avoid inflated scores.</td><td><pre>[
+ {
+  &quot;row&quot;: &quot;d06&quot;,
+  &quot;smiles&quot;: &quot;CC(Cl)Br&quot;,
+  &quot;unassigned_centers&quot;: 1
+ },
+ {
+  &quot;row&quot;: &quot;d20&quot;,
+  &quot;smiles&quot;: &quot;ClCC1CO1&quot;,
+  &quot;unassigned_centers&quot;: 1
+ }
+]</pre></td></tr>
+<tr><td>⚠ warning</td><td>near-duplicates (Morgan Tanimoto ≥ 0.95)</td><td>2</td><td>Cluster near-duplicates and keep one representative per cluster (or put the whole cluster in one split) — otherwise random splits look deceptively easy.</td><td><pre>[
+ {
+  &quot;row_a&quot;: &quot;d17&quot;,
+  &quot;row_b&quot;: &quot;d16&quot;,
+  &quot;tanimoto&quot;: 1.0
+ }
+]</pre></td></tr>
+<tr><td>⚠ warning</td><td>scaffold split overlap (66.7% of test scaffolds seen in train)</td><td>2</td><td>Use a true scaffold split (or DataSAIL/UMAP clustering) so test scaffolds are unseen; overlapping scaffolds reward memorization.</td><td><pre>[
+ {
+  &quot;test_row&quot;: &quot;d06&quot;,
+  &quot;scaffold&quot;: &quot;(acyclic)&quot;
+ },
+ {
+  &quot;test_row&quot;: &quot;d14&quot;,
+  &quot;scaffold&quot;: &quot;c1ccccc1&quot;
+ }
+]</pre></td></tr>
+<tr><td>⚠ warning</td><td>impossible or suspicious charges</td><td>1</td><td>Neutralize salts/solvents or correct formal charges; verify nitro/quaternary N patterns.</td><td><pre>[
+ {
+  &quot;row&quot;: &quot;d10&quot;,
+  &quot;smiles&quot;: &quot;[C-2]&quot;,
+  &quot;formal_charge&quot;: -2
+ }
+]</pre></td></tr>
+<tr><td>ℹ info</td><td>7 molecules isolated in chemical space (nearest-neighbor Tc&lt;0.3)</td><td>7</td><td>Treat isolated molecules as domain-gap probes: expect poor predictions there; consider acquiring analogs or flagging them at inference time.</td><td><pre>[
+ {
+  &quot;row&quot;: &quot;d10&quot;,
+  &quot;max_sim_to_rest&quot;: 0.0
+ },
+ {
+  &quot;row&quot;: &quot;d20&quot;,
+  &quot;max_sim_to_rest&quot;: 0.056
+ },
+ {
+  &quot;row&quot;: &quot;d06&quot;,
+  &quot;max_sim_to_rest&quot;: 0.1
+ }
+]</pre></td></tr>
+<tr><td>ℹ info</td><td>tautomer ambiguity</td><td>3</td><td>Canonicalize tautomers (RDKit TautomerEnumerator) before dedup/split so keto/enol forms match.</td><td><pre>[
+ {
+  &quot;row&quot;: &quot;d18&quot;,
+  &quot;smiles&quot;: &quot;CC(=O)O&quot;,
+  &quot;n_tautomers&quot;: 2,
+  &quot;canonical_tautomer&quot;: &quot;CC(=O)O&quot;
+ },
+ {
+  &quot;row&quot;: &quot;d11&quot;,
+  &quot;smiles&quot;: &quot;CC(C)=O&quot;,
+  &quot;n_tautomers&quot;: 2,
+  &quot;canonical_tautomer&quot;: &quot;CC(C)=O&quot;
+ },
+ {
+  &quot;row&quot;: &quot;d14&quot;,
+  &quot;smiles&quot;: &quot;Oc1ccccc1&quot;,
+  &quot;n_tautomers&quot;: 2,
+  &quot;canonical_tautomer&quot;: &quot;Oc1ccccc1&quot;
+ }
+]</pre></td></tr>
+<tr><td>ℹ info</td><td>isotopically labeled atoms</td><td>1</td><td>Usually harmless, but confirm labels are intentional — fingerprints may treat them as distinct.</td><td><pre>[
+ {
+  &quot;row&quot;: &quot;d13&quot;,
+  &quot;smiles&quot;: &quot;C[13C]&quot;
+ }
+]</pre></td></tr>
+<tr><td>ℹ info</td><td>rare elements in 1 molecules</td><td>1</td><td>Confirm rare elements are intentional (organometallics, counterions); most descriptors/embeddings handle them poorly — consider a separate subset.</td><td><pre>[
+ {
+  &quot;row&quot;: &quot;d19&quot;,
+  &quot;smiles&quot;: &quot;[CH3][U]&quot;,
+  &quot;rare&quot;: [
+   &quot;U&quot;
+  ]
+ }
+]</pre></td></tr>
+<tr><td>ℹ info</td><td>unusual ring systems</td><td>1</td><td>Macrocycles and singleton scaffolds are generalization tests, not training bulk — keep them, but evaluate them as a separate slice.</td><td><pre>[
+ {
+  &quot;kind&quot;: &quot;singleton scaffolds&quot;,
+  &quot;count&quot;: 1,
+  &quot;scaffolds&quot;: [
+   &quot;C1CO1&quot;
+  ]
+ }
+]</pre></td></tr></table></body></html>
