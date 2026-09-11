@@ -61,12 +61,10 @@ def _classify_sanitize_error(msg: str) -> str:
 
 def build_records(df) -> list[MoleculeRecord]:
     _require_rdkit()
-    from rdkit import Chem
-    from rdkit.Chem import Descriptors
-    from rdkit.Chem.Scaffolds import MurckoScaffold
-    from rdkit.Chem import SaltRemover
+    from rdkit import Chem, RDLogger
+    from rdkit.Chem import Descriptors, SaltRemover
     from rdkit.Chem.MolStandardize import rdMolStandardize
-    from rdkit import RDLogger
+    from rdkit.Chem.Scaffolds import MurckoScaffold
     RDLogger.DisableLog("rdApp.*")
 
     # shared helpers (constructed once)

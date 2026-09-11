@@ -1,7 +1,7 @@
 """Duplicate checks."""
+from chemcheck.checks import duplicates
 from chemcheck.io import load_table
 from chemcheck.molecules import build_records
-from chemcheck.checks import duplicates
 
 
 def _recs(tmp_path, rows):

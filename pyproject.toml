@@ -21,7 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 pretty = ["rich"]
-dev = ["pytest"]
+dev = ["pytest", "ruff"]
 notebooks = ["jupyter", "nbformat", "nbclient", "ipykernel"]
 
 [project.scripts]
@@ -34,4 +34,10 @@ where = ["src"]
 testpaths = ["tests"]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
+
+[tool.ruff.lint]
+# E/F/I only. BLE/S110 intentionally excluded: checks must never crash an
+# audit and RDKit raises unpredictable exception types, so broad defensive
+# excepts are a design choice, not sloppiness.
+select = ["E", "F", "I"]

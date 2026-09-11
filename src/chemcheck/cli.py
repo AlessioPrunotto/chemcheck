@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .models import Severity
 from .report import audit, render_html, render_json, render_junit, render_terminal
 
 

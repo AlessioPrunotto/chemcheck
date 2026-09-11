@@ -1,8 +1,6 @@
 """Chemical-integrity checks (per-molecule chemistry validity)."""
 from __future__ import annotations
 
-from collections import Counter
-
 from ..models import Finding, Severity
 
 MAX_ROWS = 200
@@ -74,7 +72,8 @@ def check_disconnected(records, ctx):
     rows = [r.row_id for r in bad]
     ex = [{"row": r.row_id, "smiles": r.canon_smi, "n_fragments": r.n_fragments} for r in bad][:ctx["max_examples"]]
     return _mk("disconnected_components", Severity.WARNING, "disconnected components (salts/mixtures)",
-               rows, ex, "Decide a salt policy: keep parent only (desalt) or encode counterions explicitly — be consistent.",
+               rows, ex, "Decide a salt policy: keep parent only (desalt) or encode counterions "
+                         "explicitly — be consistent.",
                len(records))
 
 

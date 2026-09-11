@@ -113,7 +113,8 @@ def check_tautomer_duplicates(records, ctx):
                    rate=len(affected) / max(1, len(records)),
                    affected_rows=affected[:MAX_ROWS], total_affected=len(affected),
                    examples=examples,
-                   recommendation="Canonicalize tautomers before dedup/splitting so keto/enol pairs are not treated as independent.",
+                   recommendation="Canonicalize tautomers before dedup/splitting "
+                                  "so keto/enol pairs are not treated as independent.",
                    details=f"{len(tg)} tautomer groups with multiple input forms.")
 
 

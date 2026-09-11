@@ -1,11 +1,8 @@
 """Split/leakage, ML, space, scoring, CLI."""
 import json
 
-from chemcheck.io import load_table
-from chemcheck.molecules import build_records
-from chemcheck.checks import splits, ml, space
-from chemcheck.report import audit
 from chemcheck.cli import main as cli_main
+from chemcheck.report import audit
 
 
 def _audit(tmp_path, text, **kw):

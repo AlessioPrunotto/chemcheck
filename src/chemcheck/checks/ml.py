@@ -66,7 +66,7 @@ def check_conflicting_measurements(records, ctx):
     ex = []
     for k, (v, spread) in sorted(conflicts.items(), key=lambda kv: -(kv[1][1] or 99))[:ctx["max_examples"]]:
         ex.append({"structure": k[:80], "rows": [rid for rid, _ in v][:6],
-                   "labels": [str(l) for _, l in v][:6],
+                   "labels": [str(lab) for _, lab in v][:6],
                    "spread": round(spread, 3) if spread is not None else "categorical-mismatch"})
     return Finding(check_id="conflicting_measurements", severity=Severity.ERROR,
                    title="conflicting measurements (same structure, different labels)",
