@@ -4,5 +4,10 @@ __pycache__/
 build/
 dist/
 .pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 .ipynb_checkpoints/
 .DS_Store
+docs/references/
+validation/data/
