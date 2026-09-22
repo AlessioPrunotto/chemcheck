@@ -10,20 +10,28 @@ One command to sanity-check a chemistry dataset before you train, publish, or tr
 
 ```bash
 chemcheck dataset.csv
-chemcheck train.csv test.csv --label-col activity --format json
-chemcheck dataset.sdf --split-col split --fail-on error
 ```
 
-It reports valid molecules, duplicates, stereochemical collisions, salt/tautomer
-ambiguity, split leakage, target shift, and chemical-space bias.
-Every warning comes with row IDs, evidence, and an actionable recommendation, plus
-a 0–100 dataset quality score.
+It checks for:
+ - valid molecules
+ - duplicates
+ - stereochemical collisions
+ - salt/tautomer
+ - ambiguity
+ - split leakage
+ - target shift
+ - chemical-space bias
+ - etc.
+
+Every warning comes with row IDs, evidence, and an actionable recommendation, plus a 0–100 dataset quality score.
 
 ## Install
 
 ```bash
-conda install -c conda-forge rdkit pandas scikit-learn scipy pyarrow openpyxl
-pip install -e .          # plus `pip install rich` for colored output, `pytest` for dev
+conda install -c conda-forge rdkit pandas scipy pyarrow openpyxl
+pip install -e .              # core package
+pip install -e ".[pretty]"   # optional colored terminal output
+pip install -e ".[dev]"      # contributor tools and coverage reporting
 ```
 
 RDKit is a hard dependency and must come from conda (pip wheels also work where
@@ -37,8 +45,9 @@ or by passing two files (`train.csv test.csv`).
 
 ## Exit codes (pytest-like)
 
-- `0` clean · `1` warnings · `2` errors. Tune with `--fail-on error|warning|info|never`
-  for CI gates. `--format junit` emits JUnit XML for CI dashboards.
+- `0` clean
+- `1` warnings
+- `2` errors
 
 ## What it checks
 
@@ -57,12 +66,31 @@ or by passing two files (`train.csv test.csv`).
 Every finding carries row IDs, evidence examples, and a recommendation, e.g.
 `train_row` ↔ `test_row` pairs with Tanimoto and shared scaffold for leakage.
 
+Split values named `train`/`test`/`valid` are recognized automatically. For
+custom values, repeat `--train-value` and `--test-value` as needed. With k-fold
+data, passing only `--test-value FOLD` treats every other fold as training data.
+Unresolved or ignored split values produce a warning instead of silently
+skipping leakage checks.
+
+The quality score is a transparent prioritization heuristic, not a validated
+scientific metric. Related findings are overlap-capped so the same underlying
+invalid structure, duplicate, or leakage issue is not fully deducted multiple
+times. JSON reports record tool/RDKit versions, settings, resolved columns, and
+SHA-256 input hashes for reproducibility.
+When a large-dataset check uses sampling or a bounded candidate search, JSON
+reports expose it in `meta.approximations` and in the finding's `metadata`.
+
 ## Learn
 
 - **Tutorial:** [`docs/tutorial.md`](docs/tutorial.md) — from install to CI-gated
   audits in ~20 minutes.
+- **Scientific validation:** [`docs/validation.md`](docs/validation.md) — public
+  datasets, seeded defects, threshold sensitivity, false-positive guidance, and
+  runtime through 41,127 molecules.
+- **Release process:** [`docs/releasing.md`](docs/releasing.md) — TestPyPI
+  verification and tokenless trusted publishing.
 - **Examples:** [`examples/`](examples/) — three executed notebooks, all data
   generated inline (no downloads):
   - `01_quickstart.ipynb` — CLI + Python API on a deliberately dirty dataset.
   - `02_leakage_splits.ipynb` — identity vs analog vs scaffold leakage, and fixes.
-  - `03_curation_case_study.ipynb` — full curation loop (22 → 80) with HTML report.
+  - `03_curation_case_study.ipynb` — full curation loop (39 → 80) with HTML report.

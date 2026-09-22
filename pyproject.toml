@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,21 +8,36 @@ version = "0.1.0"
 description = "pytest for molecular datasets — sanity checks for chemistry ML datasets"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Alessio Prunotto" }]
+keywords = ["cheminformatics", "molecular-machine-learning", "dataset-quality", "data-leakage", "rdkit"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Chemistry",
+]
 dependencies = [
-  "rdkit",
-  "pandas",
-  "numpy",
-  "scipy",
-  "scikit-learn",
-  "pyarrow",
-  "openpyxl",
+  "rdkit>=2022.9.5",
+  "pandas>=1.5",
+  "numpy>=1.23",
+  "scipy>=1.9",
+  "pyarrow>=10.0.1",
+  "openpyxl>=3.1",
 ]
 
+[project.urls]
+Homepage = "https://github.com/AlessioPrunotto/chemcheck"
+Repository = "https://github.com/AlessioPrunotto/chemcheck"
+Issues = "https://github.com/AlessioPrunotto/chemcheck/issues"
+
 [project.optional-dependencies]
-pretty = ["rich"]
-dev = ["pytest", "ruff"]
-notebooks = ["jupyter", "nbformat", "nbclient", "ipykernel"]
+pretty = ["rich>=13"]
+dev = ["pytest>=7.4", "pytest-cov>=5", "ruff>=0.6"]
+notebooks = ["jupyter>=1", "nbformat>=5.9", "nbclient>=0.8", "ipykernel>=6.25"]
 
 [project.scripts]
 chemcheck = "chemcheck.cli:main"
@@ -32,6 +47,18 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["chemcheck"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+[tool.coverage.xml]
+output = "coverage.xml"
 
 [tool.ruff]
 line-length = 120
