@@ -37,3 +37,14 @@ def test_unspecified_stereo_and_isotope(tmp_path):
     fi = integrity.check_isotopes(recs, ctx)
     assert fs is not None and "a" in fs.affected_rows
     assert fi is not None and "b" in fi.affected_rows
+
+
+def test_two_file_metadata_and_one_sided_labels(tmp_path):
+    train = tmp_path / "train.csv"
+    test = tmp_path / "test.csv"
+    train.write_text("id,smiles,activity\na,CCO,1.0\n")
+    test.write_text("id,smiles\nb,CCN\n")
+    df = load_table([str(train), str(test)], label_col="activity")
+    assert df.attrs["smiles_col"] == "smiles"
+    assert df.attrs["label_col"] == ["activity", None]
+    assert df["_label"].notna().sum() == 1

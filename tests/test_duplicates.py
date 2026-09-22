@@ -38,3 +38,4 @@ def test_near_duplicates(tmp_path):
     recs, ctx = _recs(tmp_path, "id,smiles\na,CCCCCCCCO\nb,CCCCCCCCCO\n")
     f = duplicates.check_near_duplicates(recs, ctx)
     assert f is not None and f.count == 2
+    assert f.metadata["approximate"] is False
