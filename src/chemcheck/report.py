@@ -1,11 +1,14 @@
 """Audit orchestration + reporters (terminal / JSON / HTML / JUnit)."""
 from __future__ import annotations
 
+import hashlib
 import html
 import json
+import os
 from datetime import datetime, timezone
 from typing import Any
 
+from . import __version__
 from .checks import run_all
 from .io import load_table
 from .models import AuditReport, Severity
@@ -13,10 +16,26 @@ from .molecules import build_records
 from .scoring import score_findings
 
 
+def _input_hashes(paths: list[str]) -> dict[str, str]:
+    """Return SHA-256 hashes for readable input files."""
+    hashes = {}
+    for path in paths:
+        digest = hashlib.sha256()
+        try:
+            with open(path, "rb") as fh:
+                for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+                    digest.update(chunk)
+        except OSError:
+            continue
+        hashes[os.path.abspath(path)] = digest.hexdigest()
+    return hashes
+
+
 def audit(paths: list[str], smiles_col: str | None = None, id_col: str | None = None,
           label_col: str | None = None, split_col: str | None = None,
           max_examples: int = 20, near_dup_thresh: float = 0.95,
-          analog_thresh: float = 0.6) -> AuditReport:
+          analog_thresh: float = 0.6, train_values: list[str] | None = None,
+          test_values: list[str] | None = None, conflict_thresh: float = 1.0) -> AuditReport:
     """Audit a molecular dataset and return a quality report.
 
     Loads input file(s), builds molecule records, runs all checks,
@@ -31,26 +50,68 @@ def audit(paths: list[str], smiles_col: str | None = None, id_col: str | None = 
         max_examples: Maximum examples stored per finding.
         near_dup_thresh: Tanimoto threshold for near-duplicates.
         analog_thresh: Tanimoto threshold for analog leakage.
+        train_values: Split values assigned to the training group.
+        test_values: Split values assigned to the test/validation group. If
+            supplied alone, every other observed value is treated as train.
+        conflict_thresh: Minimum numeric label spread considered conflicting.
 
     Returns:
         Populated audit report with findings ordered by severity.
     """
+    if max_examples < 1:
+        raise ValueError("max_examples must be at least 1")
+    if not 0.0 <= near_dup_thresh <= 1.0:
+        raise ValueError("near_dup_thresh must be between 0 and 1")
+    if not 0.0 <= analog_thresh <= 1.0:
+        raise ValueError("analog_thresh must be between 0 and 1")
+    if conflict_thresh < 0.0:
+        raise ValueError("conflict_thresh must be non-negative")
+    if train_values and test_values:
+        overlap = {str(v).strip().casefold() for v in train_values} & {
+            str(v).strip().casefold() for v in test_values}
+        if overlap:
+            raise ValueError(f"split values cannot be both train and test: {sorted(overlap)}")
     df = load_table(paths, smiles_col, id_col, label_col, split_col)
     records = build_records(df)
     n_total = len(records)
     n_valid = sum(1 for r in records if r.valid)
-    findings = run_all(records, df, max_examples, near_dup_thresh, analog_thresh)
+    approximations: list[dict[str, Any]] = []
+    findings = run_all(records, df, max_examples, near_dup_thresh, analog_thresh,
+                       train_values, test_values, conflict_thresh, approximations)
+    from .checks.splits import _split_value_sets
+    resolved_train, resolved_test, ignored_splits = _split_value_sets(
+        records, {"train_values": train_values, "test_values": test_values})
     # order: errors, warnings, infos; within group by count desc
     order = {Severity.ERROR: 0, Severity.WARNING: 1, Severity.INFO: 2}
     findings.sort(key=lambda f: (order[f.severity], -f.count))
     score, breakdown = score_findings(findings, n_total)
     n_unassigned = sum(r.n_stereo_unassigned for r in records if r.valid)
     n_centers = sum(r.n_stereo_defined + r.n_stereo_unassigned for r in records if r.valid)
+    try:
+        import rdkit
+        rdkit_version = rdkit.__version__
+    except Exception:
+        rdkit_version = None
     meta = {
+        "chemcheck_version": __version__,
+        "rdkit_version": rdkit_version,
         "source": df.attrs.get("source"),
+        "input_sha256": _input_hashes(paths),
         "smiles_col": df.attrs.get("smiles_col"),
+        "id_col": df.attrs.get("id_col"),
         "split_col": df.attrs.get("split_col"),
         "label_col": df.attrs.get("label_col") or label_col,
+        "input_columns": df.attrs.get("input_columns"),
+        "approximations": approximations,
+        "settings": {"max_examples": max_examples,
+                     "near_dup_thresh": near_dup_thresh,
+                     "analog_thresh": analog_thresh,
+                     "conflict_thresh": conflict_thresh,
+                     "train_values": train_values,
+                     "test_values": test_values,
+                     "resolved_train_values": sorted(resolved_train),
+                     "resolved_test_values": sorted(resolved_test),
+                     "ignored_split_values": sorted(ignored_splits)},
         "n_total": n_total, "n_valid": n_valid, "n_invalid": n_total - n_valid,
         "frac_unspecified_stereo": (n_unassigned / n_centers) if n_centers else 0.0,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -91,7 +152,8 @@ def to_dict(report: AuditReport) -> dict[str, Any]:
             {"check_id": f.check_id, "severity": f.severity.value, "title": f.title,
              "count": f.count, "rate": round(f.rate, 4), "total_affected": f.total_affected,
              "affected_rows": f.affected_rows[:200], "examples": f.examples[:20],
-             "recommendation": f.recommendation, "details": f.details}
+             "recommendation": f.recommendation, "details": f.details,
+             "metadata": f.metadata}
             for f in report.findings
         ],
     }

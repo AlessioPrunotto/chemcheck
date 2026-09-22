@@ -35,6 +35,8 @@ class Finding:
         examples: Example payloads illustrating the issue.
         recommendation: Suggested remediation for the user.
         details: Extra details or statistics about the finding.
+        metadata: Machine-readable check execution metadata, including
+            approximation or truncation details.
     """
 
     check_id: str
@@ -47,19 +49,15 @@ class Finding:
     examples: list[dict[str, Any]] = field(default_factory=list)
     recommendation: str = ""
     details: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class CheckResult:
-    """Result wrapper for a single check.
-
-    Attributes:
-        check_id: Stable machine-readable check identifier.
-        finding: The finding, or None if the check passed.
-    """
+    """Result wrapper for a single check."""
 
     check_id: str
-    finding: Finding | None = None  # None => passed, no finding
+    finding: Finding | None = None
 
 
 @dataclass

@@ -223,6 +223,10 @@ def check_near_duplicates(records: list[MoleculeRecord], ctx: dict[str, Any]) ->
     n = len(valid)
     if n < 2:
         return None
+    if n > 4000:
+        ctx.setdefault("approximations", []).append(
+            {"check_id": "near_duplicates", "method": "popcount_window",
+             "candidate_window": 400, "records": n})
     pairs: list[tuple[str, str, float]] = []
     # Full comparison for small sets; popcount-windowed for large sets (thin but scalable).
     if n <= 4000:
@@ -262,7 +266,11 @@ def check_near_duplicates(records: list[MoleculeRecord], ctx: dict[str, Any]) ->
                 examples=examples,
                 recommendation="Cluster near-duplicates and keep one representative per cluster (or put the "
                                "whole cluster in one split) — otherwise random splits look deceptively easy.",
-                details=f"{len(pairs)}+ pairs above threshold (capped at 5000 enumerated).")
+                details=f"{len(pairs)}+ pairs above threshold (capped at 5000 enumerated).",
+                metadata={"approximate": n > 4000,
+                          "method": "popcount_window" if n > 4000 else "all_pairs",
+                          "records": n, "candidate_window": 400 if n > 4000 else None,
+                          "pair_limit": 5000, "pair_limit_reached": len(pairs) >= 5000})
     return f
 
 

@@ -184,17 +184,31 @@ def check_applicability_gaps(records: list[MoleculeRecord], ctx: dict[str, Any])
     n = len(valid)
     if n < 10:
         return None
-    # sample for scalability: at most 3000 reference molecules
+    # For large sets, sample only to find a superset of possible gaps, then
+    # verify those candidates against every molecule. This retains scalability
+    # without turning reference-sampling misses into false alerts.
     ref = valid if n <= 3000 else valid[:: max(1, n // 3000)][:3000]
     ref_fps = [r.fp for r in ref]
-    sparse = []
+    candidates = []
     for r in valid:
         sims = DataStructs.BulkTanimotoSimilarity(r.fp, ref_fps)
         # exclude self-match (=1.0) by taking second max
         top2 = sorted(sims, reverse=True)[:2]
         nn = top2[1] if len(top2) > 1 and top2[0] >= 0.999 else (top2[0] if top2 else 0.0)
         if nn < 0.3:
-            sparse.append((r.row_id, round(float(nn), 3)))
+            candidates.append((r, float(nn)))
+    if n > 3000:
+        all_fps = [r.fp for r in valid]
+        positions = {id(r): index for index, r in enumerate(valid)}
+        sparse = []
+        for r, _ in candidates:
+            sims = DataStructs.BulkTanimotoSimilarity(r.fp, all_fps)
+            sims[positions[id(r)]] = -1.0
+            nn = max(sims, default=0.0)
+            if nn < 0.3:
+                sparse.append((r.row_id, round(float(nn), 3)))
+    else:
+        sparse = [(r.row_id, round(nn, 3)) for r, nn in candidates]
     if not sparse:
         return None
     sparse.sort(key=lambda t: t[1])
@@ -205,7 +219,10 @@ def check_applicability_gaps(records: list[MoleculeRecord], ctx: dict[str, Any])
                    examples=[{"row": rid, "max_sim_to_rest": s} for rid, s in sparse[:ctx["max_examples"]]],
                    recommendation="Treat isolated molecules as domain-gap probes: expect poor predictions there; "
                                   "consider acquiring analogs or flagging them at inference time.",
-                   details="")
+                   details="", metadata={"approximate": False,
+                                         "method": ("reference_prefilter_exact_refinement"
+                                                    if n > 3000 else "all_pairs"),
+                                         "records": n, "reference_records": len(ref)})
 
 
 CHECKS = [check_rare_elements, check_functional_groups, check_ring_systems,

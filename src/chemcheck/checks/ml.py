@@ -1,6 +1,8 @@
 """ML-readiness checks: measurements, target shift, leakage suspects, outliers."""
 from __future__ import annotations
 
+import math
+import statistics
 from collections import defaultdict
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
@@ -42,6 +44,26 @@ def _is_numeric(vals: Sequence[Any]) -> bool:
         return False
 
 
+def _is_binary_indicator(vals: Sequence[Any]) -> bool:
+    """Return whether all labels are numeric 0/1 class indicators."""
+    try:
+        values = {float(value) for value in vals}
+    except Exception:
+        return False
+    return bool(values) and values <= {0.0, 1.0}
+
+
+def _cohens_d(a: Sequence[float], b: Sequence[float]) -> float:
+    """Return absolute Cohen's d using the pooled sample standard deviation."""
+    if len(a) < 2 or len(b) < 2:
+        return 0.0
+    var_a = statistics.variance(a)
+    var_b = statistics.variance(b)
+    pooled = math.sqrt(((len(a) - 1) * var_a + (len(b) - 1) * var_b)
+                       / (len(a) + len(b) - 2))
+    return abs(statistics.fmean(a) - statistics.fmean(b)) / (pooled or 1.0)
+
+
 def check_duplicated_measurements(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
     """Flag repeated (structure, label) measurements.
 
@@ -75,8 +97,8 @@ def check_duplicated_measurements(records: list[MoleculeRecord], ctx: dict[str, 
 def check_conflicting_measurements(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
     """Flag structures with incompatible labels.
 
-    Numeric labels conflict when the range exceeds 1.0; categorical
-    labels conflict on any mismatch.
+    Numeric labels conflict when their range exceeds `conflict_thresh`;
+    categorical labels conflict on any mismatch.
 
     Args:
         records: Per-molecule records.
@@ -86,6 +108,7 @@ def check_conflicting_measurements(records: list[MoleculeRecord], ctx: dict[str,
         Error finding for conflicting measurements, or None if none found.
     """
     g = defaultdict(list)
+    threshold = float(ctx.get("conflict_thresh", 1.0))
     for r in records:
         if r.valid and r.canon_smi and r.label is not None and str(r.label) not in ("", "nan", "None"):
             g[r.canon_smi].append((r.row_id, r.label))
@@ -94,11 +117,10 @@ def check_conflicting_measurements(records: list[MoleculeRecord], ctx: dict[str,
         labs = [x[1] for x in v]
         if len(set(str(x) for x in labs)) <= 1:
             continue
-        if _is_numeric(labs):
+        if _is_numeric(labs) and not _is_binary_indicator(labs):
             f = [float(x) for x in labs]
             spread = max(f) - min(f)
-            # conflict if range > 1.0 log unit (or >10% of range heuristic thin)
-            if spread > 1.0:
+            if spread > threshold:
                 conflicts[k] = (v, spread)
         else:
             conflicts[k] = (v, None)
@@ -117,7 +139,8 @@ def check_conflicting_measurements(records: list[MoleculeRecord], ctx: dict[str,
                    examples=ex,
                    recommendation="Curate conflicts: check assay conditions, average with uncertainty, or drop "
                                   "the structure. Models cannot learn contradictory labels.",
-                   details=f"{len(conflicts)} structures with incompatible labels.")
+                   details=f"{len(conflicts)} structures with incompatible labels; "
+                           f"numeric spread threshold={threshold:g}.")
 
 
 def check_target_shift(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Finding | None:
@@ -133,15 +156,16 @@ def check_target_shift(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Fi
     Returns:
         Finding for target shift, or None if splits match or data is sparse.
     """
-    tr = [r for r in records if r.valid and (r.split or "").lower() == "train"]
-    te = [r for r in records if r.valid and (r.split or "").lower() in ("test", "valid", "validation")]
+    from .splits import _split_groups
+    tr, te = _split_groups(records, ctx)
     if not tr or not te:
         return None
     tr_labs = [r.label for r in tr if r.label is not None and str(r.label) not in ("", "nan", "None")]
     te_labs = [r.label for r in te if r.label is not None and str(r.label) not in ("", "nan", "None")]
     if len(tr_labs) < 10 or len(te_labs) < 5:
         return None
-    if _is_numeric(tr_labs) and _is_numeric(te_labs):
+    if (_is_numeric(tr_labs) and _is_numeric(te_labs)
+            and not _is_binary_indicator(tr_labs + te_labs)):
         import numpy as np
         a = np.array([float(x) for x in tr_labs], dtype=float)
         b = np.array([float(x) for x in te_labs], dtype=float)
@@ -150,9 +174,7 @@ def check_target_shift(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Fi
             stat, p = ks_2samp(a, b)
         except Exception:
             stat, p = 0.0, 1.0
-        mean_shift = abs(float(a.mean()) - float(b.mean()))
-        pooled = float(a.std() + b.std()) / 2 or 1.0
-        d = mean_shift / pooled
+        d = _cohens_d(a.tolist(), b.tolist())
         if p >= 0.05 and d < 0.5:
             return None
         sev = Severity.WARNING if d < 0.8 else Severity.ERROR
@@ -200,7 +222,7 @@ def check_outliers(records: list[MoleculeRecord], ctx: dict[str, Any]) -> Findin
     if len(lab) < 10:
         return None
     vals = [lbl for _, lbl in lab]
-    if not _is_numeric(vals):
+    if not _is_numeric(vals) or _is_binary_indicator(vals):
         return None
     import numpy as np
     a = np.array([float(v) for v in vals])
@@ -233,8 +255,8 @@ def check_split_label_leakage(records: list[MoleculeRecord], ctx: dict[str, Any]
         Finding for split-label leakage, or None if no strong gap exists.
     """
     # thin "target leakage": does split membership predict the label?
-    tr = [r for r in records if r.valid and (r.split or "").lower() == "train"]
-    te = [r for r in records if r.valid and (r.split or "").lower() in ("test", "valid", "validation")]
+    from .splits import _split_groups
+    tr, te = _split_groups(records, ctx)
     if not tr or not te:
         return None
     tr_labs = [r.label for r in tr if r.label is not None and str(r.label) not in ("", "nan", "None")]
@@ -244,7 +266,7 @@ def check_split_label_leakage(records: list[MoleculeRecord], ctx: dict[str, Any]
     import numpy as np
     a = np.array([float(x) for x in tr_labs])
     b = np.array([float(x) for x in te_labs])
-    d = abs(float(a.mean() - b.mean())) / ((float(a.std() + b.std())) / 2 or 1.0)
+    d = _cohens_d(a.tolist(), b.tolist())
     if d < 0.8:
         return None
     return Finding(check_id="target_leakage_split_predicts_label", severity=Severity.WARNING,

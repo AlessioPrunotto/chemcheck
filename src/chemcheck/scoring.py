@@ -42,6 +42,33 @@ WEIGHTS = {
     "unusual_ring_systems": 1.5,
     "representation_bias": 3.0,
     "applicability_gaps": 1.5,
+    # audit configuration (reported, but not a property of dataset quality)
+    "split_configuration": 0.0,
+}
+
+# Closely related checks often describe the same rows. These caps keep one
+# underlying problem from being charged repeatedly while retaining every
+# finding and its evidence in the report.
+OVERLAP_FAMILIES = {
+    "invalid_smiles": "invalid_structure",
+    "valence_error": "invalid_structure",
+    "aromaticity_suspect": "invalid_structure",
+    "exact_duplicates": "structural_duplicates",
+    "canonical_duplicates": "structural_duplicates",
+    "near_duplicates": "structural_duplicates",
+    "identity_leakage": "split_similarity",
+    "analog_leakage": "split_similarity",
+    "cross_split_near_duplicates": "split_similarity",
+    "suspiciously_easy_split": "split_similarity",
+    "target_distribution_shift": "target_distribution",
+    "target_leakage_split_predicts_label": "target_distribution",
+}
+
+FAMILY_CAPS = {
+    "invalid_structure": 8.0,
+    "structural_duplicates": 6.0,
+    "split_similarity": 15.0,
+    "target_distribution": 6.0,
 }
 
 
@@ -75,7 +102,6 @@ def score_findings(findings: list[Finding], n_total: int) -> tuple[int, list[dic
         sorted by deduction descending).
     """
     breakdown = []
-    total_deduction = 0.0
     for f in findings:
         if f.check_id == "split_info":
             continue
@@ -87,10 +113,31 @@ def score_findings(findings: list[Finding], n_total: int) -> tuple[int, list[dic
         else:
             fac = _factor(f.rate, f.count)
         ded = round(w * fac, 2)
-        total_deduction += ded
+        family = OVERLAP_FAMILIES.get(f.check_id)
         breakdown.append({"check_id": f.check_id, "title": f.title,
                           "severity": f.severity.value, "count": f.count,
-                          "weight": w, "deduction": ded})
+                          "weight": w, "raw_deduction": ded,
+                          "family": family, "deduction": ded})
+    family_totals: dict[str, float] = {}
+    for entry in breakdown:
+        if entry["family"]:
+            family_totals[entry["family"]] = (
+                family_totals.get(entry["family"], 0.0) + entry["raw_deduction"])
+    for entry in breakdown:
+        family = entry["family"]
+        if family and family_totals[family] > FAMILY_CAPS[family]:
+            factor = FAMILY_CAPS[family] / family_totals[family]
+            entry["deduction"] = round(entry["raw_deduction"] * factor, 2)
+            entry["overlap_adjusted"] = True
+        else:
+            entry["overlap_adjusted"] = False
+    for family, cap in FAMILY_CAPS.items():
+        family_entries = [entry for entry in breakdown if entry["family"] == family]
+        adjusted_total = round(sum(entry["deduction"] for entry in family_entries), 2)
+        if adjusted_total > cap:
+            largest = max(family_entries, key=lambda entry: entry["deduction"])
+            largest["deduction"] = round(largest["deduction"] - (adjusted_total - cap), 2)
+    total_deduction = sum(entry["deduction"] for entry in breakdown)
     breakdown.sort(key=lambda d: -d["deduction"])
     score = max(0, min(100, round(100 - total_deduction)))
     return score, breakdown
