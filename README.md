@@ -85,8 +85,8 @@ reports expose it in `meta.approximations` and in the finding's `metadata`.
 - **Tutorial:** [`docs/tutorial.md`](docs/tutorial.md) — from install to CI-gated
   audits in ~20 minutes.
 - **Scientific validation:** [`docs/validation.md`](docs/validation.md) — public
-  datasets, seeded defects, threshold sensitivity, false-positive guidance, and
-  runtime through 41,127 molecules.
+  ML datasets plus fixed ChEMBL/PubChem samples, seeded defects, threshold
+  sensitivity, false-positive guidance, and runtime through 41,127 molecules.
 - **Release process:** [`docs/releasing.md`](docs/releasing.md) — TestPyPI
   verification and tokenless trusted publishing.
 - **Examples:** [`examples/`](examples/) — three executed notebooks, all data

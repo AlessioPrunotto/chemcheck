@@ -18,6 +18,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Reproducible scientific-validation harness and committed results covering six
   public datasets (642–41,127 molecules), seeded defects, threshold sensitivity,
   approximation fidelity, expected false positives, and runtime scaling.
+- Fixed 5,000-structure ChEMBL 37 and PubChem validation samples, with committed
+  identifier lists, official-API acquisition, checksums, and structure-only
+  audit results kept distinct from ML-labelled benchmarks.
 - Tested minimum versions for runtime and optional dependencies, branch coverage
   reporting, distribution build/install checks, and a Trusted Publishing
   workflow with TestPyPI artifact verification before production release.
