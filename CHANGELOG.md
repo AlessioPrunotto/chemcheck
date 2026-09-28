@@ -29,6 +29,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   crash isolation.
 
 ### Changed
+- Separated user-facing validation guidance from the study's maintainer and
+  reviewer notes.
 - Related score deductions are capped by overlap family to avoid repeatedly
   penalizing the same invalid-structure, duplicate, split-similarity, or target-shift issue.
 - Cohen's d now uses the conventional pooled sample standard deviation.

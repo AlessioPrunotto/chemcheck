@@ -23,7 +23,8 @@ pip install -e ".[dev,notebooks]"
      and commit the refreshed outputs.
    - If you changed check semantics, default thresholds, or a large-dataset
      execution path, rerun `python validation/run_validation.py --download`
-     and commit the refreshed result tables and interpretation.
+     and commit the refreshed result tables and interpretation. Follow the
+     process and snapshot rules in `validation/MAINTAINERS.md`.
 4. Follow the existing finding contract: every new check returns row IDs,
    evidence examples, and an actionable recommendation — never a bare count.
 
