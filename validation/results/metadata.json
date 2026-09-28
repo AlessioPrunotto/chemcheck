@@ -1,0 +1,53 @@
+{
+  "python": "3.10.19",
+  "platform": "macOS-15.7.4-arm64-arm-64bit",
+  "rdkit": "2025.09.4",
+  "datasets": {
+    "freesolv": {
+      "url": "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/SAMPL.csv",
+      "sha256": "ab5895d914ee87cb563bd7b9611e869527bba45bec6b014d34dc495a0f9dcb72"
+    },
+    "delaney": {
+      "url": "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/delaney-processed.csv",
+      "sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189"
+    },
+    "bace": {
+      "url": "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/bace.csv",
+      "sha256": "f3fb9ce90bada3e2bd6148b0df13f8f8145a357bf87df0dd5b391ede974fc737"
+    },
+    "lipophilicity": {
+      "url": "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/Lipophilicity.csv",
+      "sha256": "aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd"
+    },
+    "tox21": {
+      "url": "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/tox21.csv.gz",
+      "sha256": "45d09792492ce049039dd24aa27b07fc79ce20c573187d4d90bcd178c0c0d360"
+    },
+    "hiv": {
+      "url": "https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/HIV.csv",
+      "sha256": "9ffa7fe57dc86c342627ee1d5255e937e2ab812393c73c4d16c697022f6e1d22"
+    },
+    "chembl37_sample": {
+      "url": "https://www.ebi.ac.uk/chembl/api/data/molecule.json",
+      "sha256": "50790ba94e76376528efb48d60944679b202e5e693ce7ca66c5e50926513f081",
+      "rows": 5000,
+      "identifier_file": "validation/samples/chembl37_ids.txt",
+      "selection": "10 evenly spaced pages of 500 structure-bearing records, ordered by molecule_chembl_id in ChEMBL_37",
+      "database_version": "ChEMBL_37",
+      "release_date": "2026-05-01",
+      "structure_population": 2897819,
+      "status_url": "https://www.ebi.ac.uk/chembl/api/data/status.json"
+    },
+    "pubchem_sample": {
+      "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/SMILES,InChIKey/JSON",
+      "sha256": "7c3090c52692447825ce449a7f554a6337d3f990945b381b496f1d167efcf718",
+      "rows": 5000,
+      "identifier_file": "validation/samples/pubchem_cids.txt",
+      "selection": "seeded live-CID sample (seed 20260924) from 1..124663543",
+      "population_date": "2026-09-06",
+      "live_compound_count": 124663543,
+      "cid_range_max": 124663543,
+      "population_source": "https://pubchem.ncbi.nlm.nih.gov/docs/statistics"
+    }
+  }
+}

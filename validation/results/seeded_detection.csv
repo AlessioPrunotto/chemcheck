@@ -1,0 +1,10 @@
+scenario,expected_check,injected_row,detected
+invalid,invalid_smiles,seed-invalid,True
+exact_duplicate,exact_duplicates,seed-exact_duplicate,True
+canonical_duplicate,canonical_duplicates,seed-canonical_duplicate,True
+salt_duplicate,salt_duplicates,seed-salt_duplicate,True
+stereo_collision,stereochemical_collisions,seed-stereo_collision,True
+tautomer_duplicate,tautomer_duplicates,seed-tautomer_duplicate,True
+repeated_measurement,duplicated_measurements,seed-repeated_measurement,True
+conflicting_measurement,conflicting_measurements,seed-conflicting_measurement,True
+identity_leakage,identity_leakage,seed-identity_leakage,True

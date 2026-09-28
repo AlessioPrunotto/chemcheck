@@ -1,0 +1,4 @@
+dataset,check_id,records,exact_positive,approximate_positive,precision,recall,exact_seconds
+lipophilicity,near_duplicates,4200,151,151,1.0,1.0,0.84
+lipophilicity,applicability_gaps_prefilter,4200,200,268,0.746269,1.0,1.377
+lipophilicity,applicability_gaps,4200,200,200,1.0,1.0,1.377

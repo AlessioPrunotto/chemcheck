@@ -1,0 +1,129 @@
+dataset,cohort,check_id,severity,count,rate,title,approximate
+freesolv,ml_benchmark,cross_split_near_duplicates,error,14,0.021806853582554516,near-duplicates across splits (Tc≥0.95),False
+freesolv,ml_benchmark,identity_leakage,error,2,0.003115264797507788,2D-identity leakage (2 test molecules seen in train),False
+freesolv,ml_benchmark,representation_bias,warning,523,0.8146417445482866,representation bias: top-5 scaffolds cover 81.5% of data,False
+freesolv,ml_benchmark,scaffold_overlap,warning,127,0.19781931464174454,scaffold split overlap (98.4% of test scaffolds seen in train),False
+freesolv,ml_benchmark,analog_leakage,warning,51,0.0794392523364486,analog leakage: 51 test molecules with Tc≥0.6 to train,False
+freesolv,ml_benchmark,suspiciously_easy_split,warning,51,0.3953488372093023,suspiciously easy split (median max test→train Tc=0.56),False
+freesolv,ml_benchmark,near_duplicates,warning,45,0.07009345794392523,near-duplicates (Morgan Tanimoto ≥ 0.95),False
+freesolv,ml_benchmark,stereochemical_collisions,warning,6,0.009345794392523364,stereochemical collisions,False
+freesolv,ml_benchmark,unspecified_stereo,warning,1,0.001557632398753894,molecules with unspecified stereocenters,False
+freesolv,ml_benchmark,tautomer_ambiguity,info,186,0.2897196261682243,tautomer ambiguity,False
+freesolv,ml_benchmark,applicability_gaps,info,37,0.05763239875389408,37 molecules isolated in chemical space (nearest-neighbor Tc<0.3),False
+freesolv,ml_benchmark,unusual_ring_systems,info,36,0.056074766355140186,unusual ring systems,False
+freesolv,ml_benchmark,rare_functional_groups,info,24,0.037383177570093455,rare or promiscuous functional groups,False
+freesolv,ml_benchmark,label_outliers,info,3,0.004672897196261682,3 label outliers (|z|>4),False
+delaney,ml_benchmark,cross_split_near_duplicates,error,26,0.02304964539007092,near-duplicates across splits (Tc≥0.95),False
+delaney,ml_benchmark,identity_leakage,error,6,0.005319148936170213,2D-identity leakage (6 test molecules seen in train),False
+delaney,ml_benchmark,conflicting_measurements,error,2,0.0017730496453900709,"conflicting measurements (same structure, different labels)",False
+delaney,ml_benchmark,representation_bias,warning,653,0.5789007092198581,representation bias: top-5 scaffolds cover 57.9% of data,False
+delaney,ml_benchmark,unspecified_stereo,warning,212,0.1879432624113475,molecules with unspecified stereocenters,False
+delaney,ml_benchmark,scaffold_overlap,warning,176,0.15602836879432624,scaffold split overlap (77.9% of test scaffolds seen in train),False
+delaney,ml_benchmark,near_duplicates,warning,88,0.07801418439716312,near-duplicates (Morgan Tanimoto ≥ 0.95),False
+delaney,ml_benchmark,analog_leakage,warning,87,0.07712765957446809,analog leakage: 87 test molecules with Tc≥0.6 to train,False
+delaney,ml_benchmark,suspiciously_easy_split,warning,87,0.38495575221238937,suspiciously easy split (median max test→train Tc=0.56),False
+delaney,ml_benchmark,canonical_duplicates,warning,22,0.01950354609929078,duplicate structures (canonical SMILES),False
+delaney,ml_benchmark,exact_duplicates,warning,10,0.008865248226950355,exact duplicate rows,False
+delaney,ml_benchmark,duplicated_measurements,warning,10,0.008865248226950355,"duplicated measurements (same structure, same label)",False
+delaney,ml_benchmark,stereochemical_collisions,warning,4,0.0035460992907801418,stereochemical collisions,False
+delaney,ml_benchmark,tautomer_ambiguity,info,472,0.41843971631205673,tautomer ambiguity,False
+delaney,ml_benchmark,unusual_ring_systems,info,198,0.17553191489361702,unusual ring systems,False
+delaney,ml_benchmark,applicability_gaps,info,72,0.06382978723404255,72 molecules isolated in chemical space (nearest-neighbor Tc<0.3),False
+delaney,ml_benchmark,rare_functional_groups,info,27,0.023936170212765957,rare or promiscuous functional groups,False
+delaney,ml_benchmark,label_outliers,info,1,0.0008865248226950354,1 label outliers (|z|>4),False
+bace,ml_benchmark,cross_split_near_duplicates,error,24,0.015862524785194978,near-duplicates across splits (Tc≥0.95),False
+bace,ml_benchmark,identity_leakage,error,9,0.005948446794448116,2D-identity leakage (9 test molecules seen in train),False
+bace,ml_benchmark,unspecified_stereo,warning,1070,0.7072042300066094,molecules with unspecified stereocenters,False
+bace,ml_benchmark,analog_leakage,warning,819,0.5413086582947786,analog leakage: 819 test molecules with Tc≥0.6 to train,False
+bace,ml_benchmark,suspiciously_easy_split,warning,819,0.6251908396946565,suspiciously easy split (median max test→train Tc=0.66),False
+bace,ml_benchmark,scaffold_overlap,warning,498,0.32914738929279574,scaffold split overlap (38.0% of test scaffolds seen in train),False
+bace,ml_benchmark,near_duplicates,warning,91,0.06014540647719762,near-duplicates (Morgan Tanimoto ≥ 0.95),False
+bace,ml_benchmark,stereochemical_collisions,warning,58,0.038334434897554524,stereochemical collisions,False
+bace,ml_benchmark,tautomer_ambiguity,info,1381,0.9127561136814276,tautomer ambiguity,False
+bace,ml_benchmark,unusual_ring_systems,info,533,0.3522802379378718,unusual ring systems,False
+bace,ml_benchmark,rare_functional_groups,info,35,0.023132848645076007,rare or promiscuous functional groups,False
+bace,ml_benchmark,tautomer_duplicates,info,4,0.0026437541308658294,tautomer duplicates,False
+bace,ml_benchmark,applicability_gaps,info,4,0.0026437541308658294,4 molecules isolated in chemical space (nearest-neighbor Tc<0.3),False
+lipophilicity,ml_benchmark,cross_split_near_duplicates,error,75,0.017857142857142856,near-duplicates across splits (Tc≥0.95),False
+lipophilicity,ml_benchmark,identity_leakage,error,29,0.006904761904761905,2D-identity leakage (29 test molecules seen in train),False
+lipophilicity,ml_benchmark,unspecified_stereo,warning,592,0.14095238095238094,molecules with unspecified stereocenters,False
+lipophilicity,ml_benchmark,analog_leakage,warning,526,0.12523809523809523,analog leakage: 526 test molecules with Tc≥0.6 to train,False
+lipophilicity,ml_benchmark,suspiciously_easy_split,warning,526,0.6261904761904762,suspiciously easy split (median max test→train Tc=0.69),False
+lipophilicity,ml_benchmark,scaffold_overlap,warning,447,0.10642857142857143,scaffold split overlap (53.2% of test scaffolds seen in train),False
+lipophilicity,ml_benchmark,near_duplicates,warning,241,0.05738095238095238,near-duplicates (Morgan Tanimoto ≥ 0.95),True
+lipophilicity,ml_benchmark,stereochemical_collisions,warning,180,0.04285714285714286,stereochemical collisions,False
+lipophilicity,ml_benchmark,disconnected_components,warning,1,0.0002380952380952381,disconnected components (salts/mixtures),False
+lipophilicity,ml_benchmark,tautomer_ambiguity,info,3435,0.8178571428571428,tautomer ambiguity,False
+lipophilicity,ml_benchmark,unusual_ring_systems,info,1870,0.4452380952380952,unusual ring systems,False
+lipophilicity,ml_benchmark,rare_functional_groups,info,245,0.058333333333333334,rare or promiscuous functional groups,False
+lipophilicity,ml_benchmark,applicability_gaps,info,200,0.047619047619047616,200 molecules isolated in chemical space (nearest-neighbor Tc<0.3),False
+lipophilicity,ml_benchmark,tautomer_duplicates,info,41,0.009761904761904762,tautomer duplicates,False
+lipophilicity,ml_benchmark,rare_elements,info,8,0.0019047619047619048,rare elements in 8 molecules,False
+tox21,ml_benchmark,cross_split_near_duplicates,error,205,0.02617801047120419,near-duplicates across splits (Tc≥0.95),False
+tox21,ml_benchmark,identity_leakage,error,36,0.004597114033967565,2D-identity leakage (36 test molecules seen in train),False
+tox21,ml_benchmark,invalid_smiles,error,8,0.0010215808964372365,invalid SMILES,False
+tox21,ml_benchmark,valence_error,error,8,0.0010215808964372365,impossible valence states,False
+tox21,ml_benchmark,representation_bias,warning,3490,0.44612041416336445,representation bias: top-5 scaffolds cover 44.6% of data,False
+tox21,ml_benchmark,unspecified_stereo,warning,1412,0.18030902822117226,molecules with unspecified stereocenters,False
+tox21,ml_benchmark,scaffold_overlap,warning,1197,0.15285404162942154,scaffold split overlap (76.5% of test scaffolds seen in train),False
+tox21,ml_benchmark,analog_leakage,warning,726,0.09270846635167922,analog leakage: 726 test molecules with Tc≥0.6 to train,False
+tox21,ml_benchmark,suspiciously_easy_split,warning,726,0.4638977635782748,suspiciously easy split (median max test→train Tc=0.58),False
+tox21,ml_benchmark,near_duplicates,warning,654,0.08351423828374409,near-duplicates (Morgan Tanimoto ≥ 0.95),True
+tox21,ml_benchmark,disconnected_components,warning,244,0.03115821734133572,disconnected components (salts/mixtures),False
+tox21,ml_benchmark,stereochemical_collisions,warning,229,0.0292427531605159,stereochemical collisions,False
+tox21,ml_benchmark,radical_flag,warning,15,0.0019154641808198187,radical electrons present,False
+tox21,ml_benchmark,salt_duplicates,warning,11,0.0014046737326012004,salts inconsistently represented,False
+tox21,ml_benchmark,impossible_charge,warning,1,0.00012769761205465457,impossible or suspicious charges,False
+tox21,ml_benchmark,tautomer_ambiguity,info,4109,0.5247094879325757,tautomer ambiguity,False
+tox21,ml_benchmark,unusual_ring_systems,info,1890,0.24134848678329715,unusual ring systems,False
+tox21,ml_benchmark,rare_functional_groups,info,453,0.057847018260758526,rare or promiscuous functional groups,False
+tox21,ml_benchmark,applicability_gaps,info,346,0.044183373770910486,346 molecules isolated in chemical space (nearest-neighbor Tc<0.3),False
+tox21,ml_benchmark,rare_elements,info,233,0.029753543608734518,rare elements in 233 molecules,False
+tox21,ml_benchmark,tautomer_duplicates,info,37,0.004724811646022219,tautomer duplicates,False
+tox21,ml_benchmark,isotope_flag,info,1,0.00012769761205465457,isotopically labeled atoms,False
+hiv,ml_benchmark,cross_split_near_duplicates,error,155,0.0037688136747149074,near-duplicates across splits (Tc≥0.95) (estimated on 3000/8225 sampled test molecules),True
+hiv,ml_benchmark,invalid_smiles,error,7,0.00017020448853551196,invalid SMILES,False
+hiv,ml_benchmark,valence_error,error,7,0.00017020448853551196,impossible valence states,False
+hiv,ml_benchmark,unspecified_stereo,warning,16782,0.4080531038004231,molecules with unspecified stereocenters,False
+hiv,ml_benchmark,scaffold_overlap,warning,5214,0.12677802903202276,scaffold split overlap (63.4% of test scaffolds seen in train),False
+hiv,ml_benchmark,disconnected_components,warning,3086,0.07503586451722713,disconnected components (salts/mixtures),False
+hiv,ml_benchmark,analog_leakage,warning,1606,0.03904977265543317,analog leakage: 1606 test molecules with Tc≥0.6 to train (estimated on 3000/8225 sampled test molecules),True
+hiv,ml_benchmark,suspiciously_easy_split,warning,1606,0.5353333333333333,suspiciously easy split (median max test→train Tc=0.62),True
+hiv,ml_benchmark,near_duplicates,warning,846,0.020570428185863302,near-duplicates (Morgan Tanimoto ≥ 0.95),True
+hiv,ml_benchmark,salt_duplicates,warning,204,0.004960245094463491,salts inconsistently represented,False
+hiv,ml_benchmark,impossible_charge,warning,75,0.0018236195200233424,impossible or suspicious charges,False
+hiv,ml_benchmark,radical_flag,warning,14,0.0003404089770710239,radical electrons present,False
+hiv,ml_benchmark,tautomer_ambiguity,info,26552,0.6456099399421305,tautomer ambiguity,False
+hiv,ml_benchmark,unusual_ring_systems,info,15500,0.37688136747149076,unusual ring systems,False
+hiv,ml_benchmark,rare_functional_groups,info,3518,0.08553991295256158,rare or promiscuous functional groups,False
+hiv,ml_benchmark,rare_elements,info,1893,0.04602815668538916,rare elements in 1893 molecules,False
+hiv,ml_benchmark,applicability_gaps,info,903,0.02195637902108104,903 molecules isolated in chemical space (nearest-neighbor Tc<0.3),False
+hiv,ml_benchmark,tautomer_duplicates,info,48,0.0011671164928149392,tautomer duplicates,False
+chembl37_sample,database_sample,cross_split_near_duplicates,error,49,0.0098,near-duplicates across splits (Tc≥0.95),False
+chembl37_sample,database_sample,identity_leakage,error,5,0.001,2D-identity leakage (5 test molecules seen in train),False
+chembl37_sample,database_sample,unspecified_stereo,warning,1096,0.2192,molecules with unspecified stereocenters,False
+chembl37_sample,database_sample,analog_leakage,warning,327,0.0654,analog leakage: 327 test molecules with Tc≥0.6 to train,False
+chembl37_sample,database_sample,scaffold_overlap,warning,316,0.0632,scaffold split overlap (31.6% of test scaffolds seen in train),False
+chembl37_sample,database_sample,disconnected_components,warning,196,0.0392,disconnected components (salts/mixtures),False
+chembl37_sample,database_sample,near_duplicates,warning,142,0.0284,near-duplicates (Morgan Tanimoto ≥ 0.95),True
+chembl37_sample,database_sample,stereochemical_collisions,warning,31,0.0062,stereochemical collisions,False
+chembl37_sample,database_sample,salt_duplicates,warning,24,0.0048,salts inconsistently represented,False
+chembl37_sample,database_sample,radical_flag,warning,2,0.0004,radical electrons present,False
+chembl37_sample,database_sample,tautomer_ambiguity,info,3941,0.7882,tautomer ambiguity,False
+chembl37_sample,database_sample,unusual_ring_systems,info,3535,0.707,unusual ring systems,False
+chembl37_sample,database_sample,applicability_gaps,info,790,0.158,790 molecules isolated in chemical space (nearest-neighbor Tc<0.3),False
+chembl37_sample,database_sample,rare_functional_groups,info,393,0.0786,rare or promiscuous functional groups,False
+chembl37_sample,database_sample,rare_elements,info,62,0.0124,rare elements in 62 molecules,False
+chembl37_sample,database_sample,isotope_flag,info,12,0.0024,isotopically labeled atoms,False
+chembl37_sample,database_sample,tautomer_duplicates,info,4,0.0008,tautomer duplicates,False
+pubchem_sample,database_sample,unspecified_stereo,warning,1649,0.3298,molecules with unspecified stereocenters,False
+pubchem_sample,database_sample,scaffold_overlap,warning,250,0.05,scaffold split overlap (25.0% of test scaffolds seen in train),False
+pubchem_sample,database_sample,disconnected_components,warning,220,0.044,disconnected components (salts/mixtures),False
+pubchem_sample,database_sample,radical_flag,warning,40,0.008,radical electrons present,False
+pubchem_sample,database_sample,analog_leakage,warning,10,0.002,analog leakage: 10 test molecules with Tc≥0.6 to train,False
+pubchem_sample,database_sample,unusual_ring_systems,info,3659,0.7318,unusual ring systems,False
+pubchem_sample,database_sample,tautomer_ambiguity,info,3599,0.7198,tautomer ambiguity,False
+pubchem_sample,database_sample,applicability_gaps,info,1391,0.2782,1391 molecules isolated in chemical space (nearest-neighbor Tc<0.3),False
+pubchem_sample,database_sample,rare_functional_groups,info,342,0.0684,rare or promiscuous functional groups,False
+pubchem_sample,database_sample,rare_elements,info,133,0.0266,rare elements in 133 molecules,False
+pubchem_sample,database_sample,isotope_flag,info,9,0.0018,isotopically labeled atoms,False
