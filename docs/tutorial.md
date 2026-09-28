@@ -1,31 +1,30 @@
-# chemcheck tutorial — pytest for molecular datasets
+# chemcheck tutorial: "a pytest for molecular datasets"
 
-This tutorial takes you from zero to a CI-gated dataset audit in ~20 minutes.
-It is CLI-first and skimmable; for the interactive versions with plots and
-experiments, see the notebooks in [`examples/`](../examples/):
+In about 20 minutes, you will learn how to install chemcheck, inspect a dataset,
+and configure an automated check that runs whenever the project changes.
+The tutorial focuses on short command-line examples. For interactive explanations, plots,
+and experiments, see the notebooks in [`examples/`](../examples/).
 
 | notebook | what you learn | time |
 |---|---|---|
 | `01_quickstart.ipynb` | CLI + Python API on a dirty dataset | 10 min |
 | `02_leakage_splits.ipynb` | identity vs analog vs scaffold leakage, and how to fix each | 15 min |
-| `03_curation_case_study.ipynb` | full curation loop: dirty file → 22 → 80, HTML report included | 20 min |
+| `03_curation_case_study.ipynb` | full curation loop: dirty file with quality score going from 39 to 80 after cleaning. HTML report included | 20 min |
 
-All notebook data is generated inline with RDKit — everything here runs offline.
+In the notebooks, all data is generated inline with RDKit, therefore all notebooks can be run offline.
 
 ## 1. Install
 
 ```bash
-conda install -c conda-forge rdkit pandas scikit-learn scipy pyarrow openpyxl
-pip install -e .          # from the repo root
-pip install rich          # optional: colored terminal output
+conda create -n chemcheck -c conda-forge python=3.11 rdkit
+conda activate chemcheck
+pip install -e ".[pretty]"  # [pretty] is optional: it adds a colored terminal output
 ```
-
-RDKit is a hard dependency. If it is missing, chemcheck fails fast with an
-install hint instead of a cryptic traceback.
 
 ## 2. Your first audit (60 seconds)
 
-The repo ships a deliberately dirty demo dataset — every row is a lesson:
+The repository includes a deliberately problematic demo dataset. It contains examples of many chemcheck findings, including two invalid structures and several dataset-level problems involving otherwise valid molecules.
+
 
 ```bash
 chemcheck tests/fixtures/demo.csv --label-col activity --split-col split
@@ -42,7 +41,7 @@ You get something like:
     e.g. {"structure": "Oc1ccccc1", "rows": ["m14", "m15"], "labels": ["2.5", "7.9"], ...}
     → Curate conflicts: check assay conditions, average with uncertainty, ...
 ...
-Dataset quality score: 22/100
+Dataset quality score: 39/100
   top deductions: cross_split_near_duplicates -8.61, identity_leakage -7.41, ...
 ```
 
@@ -52,40 +51,52 @@ Two files mean train/test mode (no `--split-col` needed):
 chemcheck train.csv test.csv --label-col activity
 ```
 
+Custom split names can be mapped explicitly. For a fold column, selecting the
+held-out fold automatically treats every other observed fold as train:
+
+```bash
+chemcheck dataset.csv --split-col fold --test-value 0
+```
+
+Repeat `--train-value` or `--test-value` when multiple values belong to one
+side. Unrecognized or ignored split values produce a warning rather than
+silently disabling leakage checks.
+
 ## 3. Understanding the output
 
 Every finding has the same anatomy:
 
-- **severity** — `error` (must fix: invalid chemistry, leakage, contradictions),
+- **severity:** `error` (must fix: invalid chemistry, leakage, contradictions),
   `warning` (probably fix: duplicates, unspecified stereo, easy splits),
   `info` (know about it: isotopes, tautomers, domain gaps).
-- **check_id** — stable machine-readable name (`identity_leakage`,
-  `conflicting_measurements`, …). Gate on these in CI, not on prose.
-- **count / rate + affected_rows** — how many rows, and *which* rows (your IDs).
-- **examples** — the evidence: molecule pairs, Tanimoto scores, shared scaffolds.
-- **recommendation** — what to do about it.
-- **score** — 0–100 with a printed deduction breakdown, so any score is auditable.
+- **check_id:** stable machine-readable name (`identity_leakage`,
+  `conflicting_measurements`, …). When processing JSON reports automatically,
+  use check_id rather than matching the human-readable title.
+- **count / rate + affected_rows:** how many rows, and *which* rows (your IDs).
+- **examples:** the evidence: molecule pairs, Tanimoto scores, shared scaffolds.
+- **recommendation:** what to do about it.
+- **score:** 0–100 with a printed deduction breakdown, so any score is auditable.
   Weights live in `src/chemcheck/scoring.py` and every deduction scales with
   prevalence — a handful of bad rows costs little, a systemic problem costs a lot.
 
-A warning is never just a count. That is the whole point of the tool.
+A warning should not be just a count for the user: it's meant to deliver relevant information.
 
 ## 4. Splits and leakage (the important chapter)
 
-Three different findings, three different verdicts — notebook 02 plants one of
-each so you can feel the difference:
+Based on the finding, you can have 3 different verdicts. Notebook 02 describes an example of one for
+each:
 
-1. **Identity leakage** (`error`) — same connectivity in train and test.
-   Never acceptable; metrics become memorization scores. Fix: drop or move.
-2. **Analog leakage** (`warning`, Morgan Tc ≥ 0.6, tunable via `--analog-thresh`) —
-   the test molecule is a close cousin of a training molecule. Your model is
+1. **Identity leakage** (`error`): same connectivity in train and test.
+   This is never acceptable, as metrics become memorization scores. Fix: drop or move.
+2. **Analog leakage** (`warning`, Morgan Tc ≥ 0.6, tunable via `--analog-thresh`):
+   the test molecule is a close cousin of a training molecule. The model is
    interpolating, not generalizing. Fix: keep chemical series in one split.
-3. **Scaffold overlap** (`warning`) — shared Bemis–Murcko scaffold, dissimilar
+3. **Scaffold overlap** (`warning`): shared Bemis–Murcko scaffold, dissimilar
    molecules. Context-dependent: fine for lead-optimization claims, fatal for
    "works on new chemotypes" claims. Match the split to the claim.
 
 Rule of thumb: re-audit after every fix. The score should only go in one
-direction (notebook 02 goes 55 → 82 → 93).
+direction (notebook 02 goes 71 → 82 → 93).
 
 ## 5. Python API cookbook
 
@@ -109,6 +120,17 @@ for ex in leaks[0].examples:          # train_row, test_row, tanimoto, ...
 ```python
 strict = audit(["train.csv", "test.csv"], analog_thresh=0.5, near_dup_thresh=0.9)
 ```
+
+For repeated numeric measurements, configure the label spread that counts as
+contradictory in your target's units:
+
+```python
+assay = audit(["assay.csv"], label_col="pIC50", conflict_thresh=0.5)
+```
+
+For large datasets, inspect `report.meta["approximations"]`. It records when a
+check used deterministic sampling or a bounded candidate window; the same
+information is included per finding in JSON output.
 
 **Recipe 3 — mine the JSON (diff dataset versions in a PR):**
 
@@ -135,8 +157,7 @@ with open("dataset_qc.html", "w") as fh:
 
 ## 6. CI integration
 
-Gate datasets the way pytest gates code. `dataset.sdf` failing on any error,
-with JUnit output for the build dashboard:
+Run Chemcheck automatically whenever the repository changes. The following GitHub Actions step fails if dataset.sdf contains any error-level finding and writes a JUnit report that CI tools can display.
 
 ```yaml
 # .github/workflows/chemcheck.yml
@@ -147,7 +168,7 @@ with JUnit output for the build dashboard:
 ## 7. FAQ
 
 **Is this a replacement for RDKit / MolVS / the ChEMBL curation pipeline?**
-No — it is built *on top* of RDKit. Standardizers fix molecules one at a time;
+No. chemcheck is built *on top* of RDKit. Standardizers fix molecules one at a time;
 chemcheck reasons across rows and splits (duplicates, leakage, shift).
 Use both: standardize first, then audit.
 
@@ -159,10 +180,10 @@ counts as lower bounds. Thresholds are tunable.
 **My score is low. Where do I start?**
 Errors first, in this order: `invalid_smiles` → `identity_leakage` /
 `cross_split_near_duplicates` → `conflicting_measurements`. Then warnings by
-deduction size (`score_breakdown` tells you). Notebook 03 walks a 22 → 80
+deduction size (`score_breakdown` tells you). Notebook 03 walks a 39 → 80
 curation end to end.
 
-**A standardizer corrupted my molecule — now what?**
+**A standardizer corrupted my molecule: now what?**
 That happened to us too: RDKit's default salt stripper deletes neutral acetic
 acid (carboxylic acids match its salt list). Defensive rule from notebook 03:
 check every transformation's output, keep the input on failure, and let the
@@ -171,4 +192,4 @@ re-audit confirm the fix.
 **How do I cite / reference the report?**
 Export `--format json` (exact counts, row IDs, thresholds in one file) or the
 HTML report alongside the dataset. Both record the chemcheck version
-implicitly via the finding set — pin the version in your environment.
+implicitly via the finding set. Pin the version in your environment.
