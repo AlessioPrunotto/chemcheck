@@ -1,4 +1,4 @@
-# chemcheck — pytest for molecular datasets
+# chemcheck: a pytest for molecular datasets
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/AlessioPrunotto/chemcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/AlessioPrunotto/chemcheck/actions/workflows/ci.yml)
@@ -27,21 +27,33 @@ Every warning comes with row IDs, evidence, and an actionable recommendation, pl
 
 ## Install
 
+From a cloned copy of this repository:
+
 ```bash
-conda install -c conda-forge rdkit pandas scipy pyarrow openpyxl
-pip install -e .              # core package
-pip install -e ".[pretty]"   # optional colored terminal output
-pip install -e ".[dev]"      # contributor tools and coverage reporting
+python -m pip install .             # core package
+python -m pip install ".[pretty]"  # core package plus colored terminal output
 ```
 
-RDKit is a hard dependency and must come from conda (pip wheels also work where
-available). chemcheck fails fast with an install hint if RDKit is missing.
+Choose one of these commands; they are alternatives, not consecutive steps.
+Required dependencies (including RDKit, pandas, SciPy, PyArrow, and openpyxl) are
+declared in `pyproject.toml` and installed automatically by pip.
+
+If a compatible RDKit wheel is not available for your Python version or
+platform, install RDKit from conda-forge first and then install chemcheck:
+
+```bash
+conda install -c conda-forge rdkit
+python -m pip install .
+```
+
+Contributors who need an editable installation, tests, coverage reporting, or
+the notebooks should follow [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Inputs
 
 CSV/TSV, SDF/SD, Parquet, Excel, JSON-lines. The SMILES column is autodetected
-(`smiles`, `canonical_smiles`, …) or pass `--smiles-col`. Splits via `--split-col`
-or by passing two files (`train.csv test.csv`).
+(`smiles`, `canonical_smiles`, ...); alternatively, you can pass `--smiles-col`. Splits (training set / test set)
+can be passed via a column (`--split-col`) or by passing two files (`train.csv test.csv`).
 
 ## Exit codes (pytest-like)
 
@@ -55,7 +67,8 @@ or by passing two files (`train.csv test.csv`).
   impossible charges, disconnected components (salts/mixtures), isotopes,
   radicals, unspecified stereocenters, tautomer ambiguity.
 - **Dataset duplicates:** exact, canonical, stereochemical collisions, salt/solvate
-  duplicates, tautomer duplicates, near-duplicates (Morgan Tanimoto).
+  duplicates, tautomer duplicates, near-duplicates (Morgan fingerprints, similarity
+  measured with Tanimoto distance).
 - **Split leakage:** 2D-identity leakage, analog leakage (Tc ≥ 0.6), near-duplicates
   across splits, scaffold overlap, suspiciously-easy-split heuristic.
 - **ML readiness:** duplicated/conflicting measurements, target distribution shift,
@@ -66,14 +79,32 @@ or by passing two files (`train.csv test.csv`).
 Every finding carries row IDs, evidence examples, and a recommendation, e.g.
 `train_row` ↔ `test_row` pairs with Tanimoto and shared scaffold for leakage.
 
-Split values named `train`/`test`/`valid` are recognized automatically. For
-custom values, repeat `--train-value` and `--test-value` as needed. With k-fold
-data, passing only `--test-value FOLD` treats every other fold as training data.
-Unresolved or ignored split values produce a warning instead of silently
-skipping leakage checks.
+To run leakage checks, Chemcheck must know which rows are training data and
+which are held out for testing or validation. Common split values such as
+`train`, `test`, and `valid` are recognized automatically. If your dataset uses
+different names, map them explicitly; for example:
 
-The quality score is a transparent prioritization heuristic, not a validated
-scientific metric. Related findings are overlap-capped so the same underlying
+```bash
+chemcheck dataset.csv --split-col partition \
+  --train-value development --test-value external
+```
+
+For numbered cross-validation folds, you only need to identify the held-out
+fold. This treats fold `0` as test data and every other observed fold as
+training data:
+
+```bash
+chemcheck dataset.csv --split-col fold --test-value 0
+```
+
+If Chemcheck cannot form both a non-empty training group and a non-empty test
+group, it reports a warning and does not run the leakage checks. If only some
+split values are mapped, it warns that the remaining rows were excluded from
+those checks.
+
+The quality score is a prioritization heuristic, not a validated scientific metric.
+The quality score starts from 100, and points are subtracted for each bad quality finding.
+Related findings are overlap-capped so the same underlying
 invalid structure, duplicate, or leakage issue is not fully deducted multiple
 times. JSON reports record tool/RDKit versions, settings, resolved columns, and
 SHA-256 input hashes for reproducibility.
@@ -86,9 +117,7 @@ reports expose it in `meta.approximations` and in the finding's `metadata`.
   audits in ~20 minutes.
 - **Scientific validation:** [`docs/validation.md`](docs/validation.md) — public
   ML datasets plus fixed ChEMBL/PubChem samples, seeded defects, threshold
-  sensitivity, false-positive guidance, and runtime through 41,127 molecules.
-- **Release process:** [`docs/releasing.md`](docs/releasing.md) — TestPyPI
-  verification and tokenless trusted publishing.
+  sensitivity, false-positive guidance, and runtime through 40k+ molecules.
 - **Examples:** [`examples/`](examples/) — three executed notebooks, all data
   generated inline (no downloads):
   - `01_quickstart.ipynb` — CLI + Python API on a deliberately dirty dataset.
