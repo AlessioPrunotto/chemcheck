@@ -15,18 +15,23 @@ The committed results were generated on 2026-09-24 with Python 3.10.19, RDKit
 2025.09.4, and macOS 15.7.4 on arm64. Dataset URLs, SHA-256 hashes, and complete
 machine-readable results are in [`../validation/results/`](../validation/results/).
 
+Again, people that are interested in the details of how the validation was technically
+performed, and all the related material (scripts, output files, etc.) should refer to the
+[maintainer notes](../validation/MAINTAINERS.md). Here, we will just discuss briefly and
+generally the validation outcomes.
+
 ## What was tested
 
 Six public datasets distributed through the DeepChem/MoleculeNet object store
 and two fixed chemical-database samples were used. MoleculeNet describes the
 provenance and intended tasks of its benchmarks
-([Wu et al., 2018](https://doi.org/10.1039/C7SC02664A)). ESOL is the
-aqueous-solubility dataset introduced by
-[Delaney (2004)](https://pubmed.ncbi.nlm.nih.gov/15154768/), and FreeSolv is a
+([Wu et al., 2018](https://doi.org/10.1039/C7SC02664A)). Among the six MoleculeNet public
+datasets, we can cite ESOL, the aqueous-solubility dataset introduced by
+[Delaney (2004)](https://pubmed.ncbi.nlm.nih.gov/15154768/), and FreeSolv, a
 curated hydration-free-energy collection
 ([Mobley and Guthrie, 2014](https://pmc.ncbi.nlm.nih.gov/articles/PMC4113415/)).
 
-The database cohorts contain 5,000 structures each. They are fixed,
+The two fixed chemical-database samples contain 5,000 structures each. They are fixed,
 checksum-pinned samples from the official
 [ChEMBL data service](https://chembl.gitbook.io/chembl-interface-documentation/web-services/chembl-data-web-services)
 and [PubChem PUG REST](https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest), so the
@@ -35,16 +40,16 @@ The exact identifiers are in
 [`../validation/samples/`](../validation/samples/). Sampling and refresh rules
 are documented separately for maintainers.
 
-| Dataset | Rows | Task used | Split used |
-|---|---:|---|---|
-| FreeSolv | 642 | hydration free energy | deterministic 80/20 row holdout |
-| ESOL/Delaney | 1,128 | aqueous solubility | deterministic 80/20 row holdout |
-| BACE | 1,513 | binary inhibition class | supplied `Model` train/test/valid values |
-| Lipophilicity | 4,200 | experimental logD | deterministic 80/20 row holdout |
-| Tox21 | 7,831 | NR-AR binary endpoint | deterministic 80/20 row holdout |
-| HIV | 41,127 | binary activity | deterministic 80/20 row holdout |
-| ChEMBL 37 sample | 5,000 | structure-only audit | deterministic 80/20 row holdout |
-| PubChem sample | 5,000 | structure-only audit | deterministic 80/20 row holdout |
+| Dataset | Rows | Task used | Split used | Source |
+|---|---:|---|---|---|
+| FreeSolv | 642 | hydration free energy | deterministic 80/20 row holdout | DeepChem/MoleculeNet |
+| ESOL/Delaney | 1,128 | aqueous solubility | deterministic 80/20 row holdout | DeepChem/MoleculeNet |
+| BACE | 1,513 | binary inhibition class | supplied `Model` train/test/valid values | DeepChem/MoleculeNet |
+| Lipophilicity | 4,200 | experimental logD | deterministic 80/20 row holdout | DeepChem/MoleculeNet |
+| Tox21 | 7,831 | NR-AR binary endpoint | deterministic 80/20 row holdout | DeepChem/MoleculeNet |
+| HIV | 41,127 | binary activity | deterministic 80/20 row holdout | DeepChem/MoleculeNet |
+| ChEMBL 37 sample | 5,000 | structure-only audit | deterministic 80/20 row holdout | ChEMBL database |
+| PubChem sample | 5,000 | structure-only audit | deterministic 80/20 row holdout | PubChem database |
 
 The deterministic row holdouts deliberately emulate a common random-split
 workflow. They are useful for diagnosing overlap, but they do not constitute
@@ -64,13 +69,26 @@ The study asks four practical questions:
 
 ### Known-defect sensitivity
 
-All 9/9 inserted cases were detected: invalid SMILES, exact and canonical
-duplicates, inconsistent salt forms, stereochemical and tautomer collisions,
-repeated and conflicting measurements, and identity leakage across a split.
-This is a focused sensitivity test, hence not a claim of 100% sensitivity across all
-30 checks or all chemical representations.
+### Detection of deliberately inserted defects
+
+To test whether Chemcheck can detect specific known problems, nine controlled defects were deliberately inserted into temporary copies of genuine public-dataset records.
+
+| Scenario | Deliberate modification |
+|---|---|
+| Invalid SMILES | Added one row containing a malformed SMILES string |
+| Exact duplicate | Copied an existing structure without changing its SMILES |
+| Canonical duplicate | Added the same molecule using a different but equivalent SMILES |
+| Salt duplicate | Added an existing molecule with an additional sodium component |
+| Stereochemical collision | Added a version of a molecule with reversed stereochemistry |
+| Tautomer duplicate | Added a different tautomeric representation of an existing molecule |
+| Repeated measurement | Repeated the same structure with the same label |
+| Conflicting measurement | Repeated the same structure but changed its numeric label |
+| Identity leakage | Copied a training molecule into the test set |
+
+For each scenario, the validation required the corresponding Chemcheck finding to identify the deliberately inserted row. All nine inserted defects were detected.
 
 ### Findings on unmodified public data
+Here are the chemcheck results from the unmodified original datasets.
 
 | Dataset | Invalid | Identity leakage | Cross-split Tc ≥ 0.95 | Test Tc ≥ 0.60 | Scaffold overlap |
 |---|---:|---:|---:|---:|---:|
@@ -87,13 +105,17 @@ The HIV similarity counts are based on a deterministic sample of 3,000 of
 8,225 test rows and are labeled approximate in the report. Identity and
 scaffold checks still use all eligible records.
 
-For ChEMBL and PubChem, the train/test column was created only to ask what a
-naive row holdout of each sample would look like. The reported overlap is not
-"leakage in ChEMBL" or "leakage in PubChem." Likewise, zero invalid structures
-is expected from standardized Molecule/Compound endpoints and says nothing
-about rejected or unstandardized depositor records. PubChem Compound represents
-unique standardized structures, so its lack of duplicate findings is also not
-evidence that PubChem Substance records are duplicate-free.
+ChEMBL and PubChem are chemical databases and not machine-learning datasets, hence
+they do not contain a separation in training and test set. We therefore divided artificially
+each 5000-molecule sample into 80% "training" rows and 20% "test" rows. This was done to have
+a naive idea of how each sample would look like. Therefore, the reported overlap should not be
+intended as a real "leakage in ChEMBL" or "leakage in PubChem."
+Likewise, zero invalid structures is expected from standardized Molecule/Compound endpoints
+because records that could not be interpreted or standardized may already have been rejected,
+excluded, or transformed before reaching these endpoints.
+PubChem has two relevant conceptual layers: _Substance_ and _Compound_. This dataset is derived
+from _Compound_, which represents unique standardized structures, so its lack of duplicate findings
+is also not surprising. However, this is not evidence that PubChem _Substance_ records are duplicate-free.
 
 The structure-only cohorts also exposed patterns that are uncommon or invisible
 in the small ML benchmarks:
@@ -112,7 +134,7 @@ bad curation.
 The six ML-benchmark quality scores ranged from 63 to 74; the structure-only
 ChEMBL and PubChem samples scored 77 and 87. Those higher values are not evidence
 that the databases are intrinsically cleaner: label-dependent checks do not
-apply to them, and both APIs expose standardized structures. The score is a
+apply to them, and both APIs expose standardized structures. Once again, the score is a
 prioritization heuristic, not a scientific ranking or publication gate.
 
 ### How to interpret the default similarity thresholds
