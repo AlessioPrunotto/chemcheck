@@ -4,9 +4,31 @@ Thanks for stopping by — issues and pull requests are welcome.
 
 ## Setup
 
+Chemcheck requires Python 3.10 or newer and is tested with Python 3.10–3.12.
+From a cloned copy of the repository, create an isolated environment and
+install chemcheck in editable mode with the testing and notebook dependencies:
+
 ```bash
-conda install -c conda-forge rdkit pandas scipy pyarrow openpyxl
-pip install -e ".[dev,notebooks]"
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev,notebooks]"
+```
+
+On Windows, use the environment creation and activation commands in the
+[README](README.md#install), then run the same editable pip installation.
+
+This command also installs the core dependencies declared in `pyproject.toml`,
+including RDKit, pandas, SciPy, PyArrow, and openpyxl. The editable installation
+means that changes to the source code take effect without reinstalling the
+package.
+
+If a compatible RDKit wheel is not available for your Python version or
+platform, use a Conda environment instead:
+
+```bash
+conda create -n chemcheck-dev -c conda-forge python=3.11 rdkit pip
+conda activate chemcheck-dev
+python -m pip install -e ".[dev,notebooks]"
 ```
 
 ## Workflow
