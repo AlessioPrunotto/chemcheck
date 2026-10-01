@@ -17,11 +17,20 @@ In the notebooks, all data is generated inline with RDKit, therefore all noteboo
 
 ## 1. Install
 
+Chemcheck requires Python 3.10 or newer and is tested with Python 3.10–3.12.
+From the cloned repository, create an isolated environment and install the
+package. On macOS or Linux:
+
 ```bash
-conda create -n chemcheck -c conda-forge python=3.11 rdkit
-conda activate chemcheck
-pip install -e ".[pretty]"  # [pretty] is optional: it adds a colored terminal output
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install ".[pretty]"
 ```
+
+The `pretty` option adds colored terminal output. You can replace the final
+command with `python -m pip install .` if you do not want it. Windows activation
+instructions and the Conda fallback for systems without a compatible RDKit
+wheel are documented in the [README](../README.md#install).
 
 ## 2. Your first audit (60 seconds)
 

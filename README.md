@@ -27,22 +27,35 @@ Every warning comes with row IDs, evidence, and an actionable recommendation, pl
 
 ## Install
 
-From a cloned copy of this repository:
+Chemcheck requires Python 3.10 or newer and is tested with Python 3.10–3.12.
+From a cloned copy of this repository, create an isolated environment before
+installing the package. On macOS or Linux:
 
 ```bash
-python -m pip install .             # core package
-python -m pip install ".[pretty]"  # core package plus colored terminal output
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install .
 ```
 
-Choose one of these commands; they are alternatives, not consecutive steps.
-Required dependencies (including RDKit, pandas, SciPy, PyArrow, and openpyxl) are
-declared in `pyproject.toml` and installed automatically by pip.
+On Windows PowerShell, create and activate the environment with:
+
+```powershell
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install .
+```
+
+To add colored terminal output, use `python -m pip install ".[pretty]"` as the
+installation command instead. Required dependencies—including RDKit, pandas,
+SciPy, PyArrow, and openpyxl—are declared in `pyproject.toml` and installed
+automatically by pip.
 
 If a compatible RDKit wheel is not available for your Python version or
-platform, install RDKit from conda-forge first and then install chemcheck:
+platform, use a Conda environment instead:
 
 ```bash
-conda install -c conda-forge rdkit
+conda create -n chemcheck -c conda-forge python=3.11 rdkit pip
+conda activate chemcheck
 python -m pip install .
 ```
 
