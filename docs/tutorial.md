@@ -1,9 +1,11 @@
-# chemcheck tutorial: "a pytest for molecular datasets"
+# chemcheck: a pytest for molecular datasets
 
-In about 20 minutes, you will learn how to install chemcheck, inspect a dataset,
+With this tutorial, you will learn how to install chemcheck, inspect a dataset,
 and configure an automated check that runs whenever the project changes.
-The tutorial focuses on short command-line examples. For interactive explanations, plots,
-and experiments, see the notebooks in [`examples/`](../examples/).
+This tutorial focuses on short command-line examples.
+
+If you prefer interactive explanations, plots,
+and experiments, see the following notebooks in [`examples/`](../examples/).
 
 | notebook | what you learn | time |
 |---|---|---|
@@ -25,12 +27,13 @@ pip install -e ".[pretty]"  # [pretty] is optional: it adds a colored terminal o
 
 The repository includes a deliberately problematic demo dataset. It contains examples of many chemcheck findings, including two invalid structures and several dataset-level problems involving otherwise valid molecules.
 
-
 ```bash
 chemcheck tests/fixtures/demo.csv --label-col activity --split-col split
 ```
+`label-col`: tells chemcheck which column contains the target value (typically activity, pIC50, etc.). Given these values, chemcheck can monitor conflicting measurements, unusual values, etc. <br>
+`split-col`: the column which splits your data into training set and test set
 
-You get something like:
+Your output will look like:
 
 ```
 ✓ 18 valid molecules / ✕ 2 invalid (n=20)
@@ -45,17 +48,18 @@ Dataset quality score: 39/100
   top deductions: cross_split_near_duplicates -8.61, identity_leakage -7.41, ...
 ```
 
-Two files mean train/test mode (no `--split-col` needed):
+If you input two files, these will be automatically read as training set and test set (no `--split-col` needed):
 
 ```bash
 chemcheck train.csv test.csv --label-col activity
 ```
 
-Custom split names can be mapped explicitly. For a fold column, selecting the
-held-out fold automatically treats every other observed fold as train:
+If your split column does not have explicit values "training", "test", but rather custom values, you can map
+them explicitly. For example, you can select which value of `fold` is
+associated to the test set, and chemcheck will automatically treats every other value as training set:
 
 ```bash
-chemcheck dataset.csv --split-col fold --test-value 0
+chemcheck dataset.csv --split-col split --test-value 0
 ```
 
 Repeat `--train-value` or `--test-value` when multiple values belong to one
@@ -77,14 +81,13 @@ Every finding has the same anatomy:
 - **recommendation:** what to do about it.
 - **score:** 0–100 with a printed deduction breakdown, so any score is auditable.
   Weights live in `src/chemcheck/scoring.py` and every deduction scales with
-  prevalence — a handful of bad rows costs little, a systemic problem costs a lot.
+  prevalence: a handful of bad rows costs little, a systemic problem costs a lot.
 
 A warning should not be just a count for the user: it's meant to deliver relevant information.
 
 ## 4. Splits and leakage (the important chapter)
 
-Based on the finding, you can have 3 different verdicts. Notebook 02 describes an example of one for
-each:
+Based on the finding, you can have 3 different verdicts. Notebook 02 (`examples/02_leakage_splits.ipynb`) describes an example of one for each:
 
 1. **Identity leakage** (`error`): same connectivity in train and test.
    This is never acceptable, as metrics become memorization scores. Fix: drop or move.
@@ -95,65 +98,111 @@ each:
    molecules. Context-dependent: fine for lead-optimization claims, fatal for
    "works on new chemotypes" claims. Match the split to the claim.
 
-Rule of thumb: re-audit after every fix. The score should only go in one
-direction (notebook 02 goes 71 → 82 → 93).
+Rule of thumb: re-audit after every fix. The score should improve every time a fix is performed (notebook 02 goes 71 → 82 → 93).
 
 ## 5. Python API cookbook
 
+You can also run chemcheck from Python instead of the command line. Pass the
+input files as a list; one file is audited as a single dataset, while two files
+are treated as training and test data.
+
 ```python
-from chemcheck.report import audit, render_json, render_html, render_terminal
+from chemcheck.report import audit, render_html, render_json
 
 report = audit(["dataset.csv"], label_col="activity", split_col="split")
 print(report.score, f"{report.n_valid}/{report.n_total} valid")
 ```
 
-**Recipe 1 — work with one finding at a time:**
+`audit()` returns an `AuditReport`. Its `findings` list contains the problems
+and review signals detected by the individual checks.
+
+### Recipe 1: inspect one type of finding.
+If you are particularly interested in one specific type of finding, you can inspect that one alone. For example,
+if you are particularly interested in leakage of analogs from the training set to the test set:
 
 ```python
-leaks = [f for f in report.findings if f.check_id == "analog_leakage"]
-for ex in leaks[0].examples:          # train_row, test_row, tanimoto, ...
-    print(ex["test_row"], "is a", ex["tanimoto"], "neighbor of", ex["train_row"])
+analog_leakage = next(
+    (finding for finding in report.findings if finding.check_id == "analog_leakage"),
+    None,
+)
+
+if analog_leakage is None:
+    print("No close train/test analogues were found.")
+else:
+    for example in analog_leakage.examples:
+        print(
+            "test row", example["test_row"],
+            "has similarity", example["tanimoto"],
+            "to train row", example["train_row"],
+        )
 ```
 
-**Recipe 2 — tune sensitivity:**
+### Recipe 2: make similarity checks more sensitive.
+You can also decide to increase the sensitivity to similarity checks.
 
 ```python
-strict = audit(["train.csv", "test.csv"], analog_thresh=0.5, near_dup_thresh=0.9)
+more_sensitive = audit(
+    ["train.csv", "test.csv"],
+    analog_thresh=0.5,
+    near_dup_thresh=0.9,
+)
 ```
 
-For repeated numeric measurements, configure the label spread that counts as
-contradictory in your target's units:
+The defaults are `0.60` for analogues and `0.95` for near duplicates. Lowering
+these thresholds reports more pairs, so this configuration is **more
+sensitive**. Raising the same values will report fewer similar pairs.
+
+For repeated numeric measurements, `conflict_thresh` specifies how far apart
+the largest and smallest values for the same structure may be before chemcheck
+reports a conflict. The value uses the same units as the label. Here, repeated
+pIC50 measurements are reported when their spread is greater than `0.5`:
 
 ```python
 assay = audit(["assay.csv"], label_col="pIC50", conflict_thresh=0.5)
 ```
 
-For large datasets, inspect `report.meta["approximations"]`. It records when a
-check used deterministic sampling or a bounded candidate window; the same
-information is included per finding in JSON output.
+On large datasets, it would be impractical to compare every molecule with all other molecules. In this case,
+similarity checks use deterministic sampling. `report.meta["approximations"]`
+records whether this happened and which checks were affected. The JSON report
+contains the same information.
 
-**Recipe 3 — mine the JSON (diff dataset versions in a PR):**
+### Recipe 3: extract counts from the JSON report.
+You can extract other relevant information, such as the number of corrupted SMILES, from the JSON report:
 
 ```python
 import json
+
 info = json.loads(render_json(report))
-{entry["check_id"]: entry["count"] for entry in info["findings"]}
+counts = {entry["check_id"]: entry["count"] for entry in info["findings"]}
+print(counts)
 ```
 
-**Recipe 4 — fail a pipeline on errors only:**
+This produces a dictionary such as `{"invalid_smiles": 2,
+"analog_leakage": 14}`, which can be stored or compared between dataset
+versions.
+
+### Recipe 4: fail a pipeline on errors only.
+With `--fail-on error`, warnings are allowed: the exit code is `0` when there
+are no error-level findings and `2` when at least one error is found. Use
+`--fail-on warning` if warnings should also fail the pipeline; in that mode a
+warning produces exit code `1` and an error produces exit code `2`.
 
 ```python
 from chemcheck.cli import main as chemcheck_main
-raise SystemExit(chemcheck_main(["dataset.csv", "--fail-on", "error", "-q"]))
-# exit codes: 0 clean · 1 warnings · 2 errors
+
+exit_code = chemcheck_main(["dataset.csv", "--fail-on", "error", "--quiet"])
+raise SystemExit(exit_code)
 ```
 
-**Recipe 5 — export the QC record for a submission:**
+### Recipe 5: save an HTML quality-control report.
 
 ```python
-with open("dataset_qc.html", "w") as fh:
+with open("dataset_qc.html", "w", encoding="utf-8") as fh:
     fh.write(render_html(report))
 ```
+
+The resulting file is a standalone report that can be opened in a browser or
+shared with the dataset.
 
 ## 6. CI integration
 
