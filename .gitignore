@@ -8,6 +8,7 @@ dist/
 coverage.xml
 htmlcov/
 .ipynb_checkpoints/
+.venv/
 .DS_Store
 docs/references/
 validation/data/
