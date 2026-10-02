@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-labelledby="title desc">
+  <title id="title">chemcheck graphical abstract</title>
+  <desc id="desc">A molecular dataset enters chemcheck, which audits chemical integrity, duplicates, split leakage, machine-learning readiness, and chemical-space coverage. It produces prioritized findings with affected row identifiers, evidence, and recommended actions for human review or continuous integration.</desc>
+  <defs>
+    <style>
+      .t{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;fill:#172033}.h{font-size:29px;font-weight:700}.brand{font-size:36px;font-weight:750}.sh{font-size:18px;font-weight:650}.b{font-size:15px}.sm{font-size:13px}.muted{fill:#64748b}.panel{fill:#fff;stroke:#d8e0eb;stroke-width:2}.core{fill:#f5f3ff;stroke:#b9a9ff;stroke-width:2}.row{fill:#f8fafc}.pill{fill:#fff;stroke:#d8e0eb;stroke-width:1.5}.arrow{stroke:#94a3b8;stroke-width:3;fill:none;marker-end:url(#arrow)}.bond{stroke:#334155;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.bond2{stroke:#334155;stroke-width:1.7;stroke-linecap:round}.check{fill:none;stroke:#6d5bd0;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}.red{fill:#fee2e2}.amber{fill:#ffedd5}.blue{fill:#e0f2fe}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/></marker>
+  </defs>
+
+  <rect width="1200" height="440" rx="24" fill="#f8fafc"/>
+
+  <!-- Input dataset -->
+  <rect x="42" y="67" width="250" height="306" rx="20" class="panel"/>
+  <text x="68" y="105" class="t sh">MOLECULAR DATASET</text>
+
+  <rect x="68" y="132" width="198" height="62" rx="10" class="row"/>
+  <g transform="translate(82 142)">
+    <path d="M7 12 L25 2 L43 12 L43 32 L25 42 L7 32 Z" fill="none" class="bond"/>
+    <line x1="11" y1="14" x2="25" y2="7" class="bond2"/><line x1="38" y1="15" x2="38" y2="29" class="bond2"/><line x1="12" y1="29" x2="25" y2="37" class="bond2"/>
+  </g>
+  <text x="158" y="158" class="t b">train</text><text x="158" y="180" class="t sm muted">activity 2.5</text>
+
+  <rect x="68" y="206" width="198" height="62" rx="10" class="row"/>
+  <g transform="translate(76 217)">
+    <line x1="2" y1="31" x2="25" y2="17" class="bond"/><line x1="25" y1="17" x2="48" y2="31" class="bond"/>
+    <text x="51" y="36" class="t b" fill="#dc2626">OH</text>
+  </g>
+  <text x="158" y="232" class="t b">train</text><text x="158" y="254" class="t sm muted">activity 4.1</text>
+
+  <rect x="68" y="280" width="198" height="62" rx="10" class="row"/>
+  <g transform="translate(82 291)">
+    <path d="M7 12 L25 2 L43 12 L43 32 L25 42 L7 32 Z" fill="none" class="bond"/>
+    <text x="20" y="0" class="t sm" fill="#2563eb">N</text><text x="20" y="55" class="t sm" fill="#dc2626">O</text>
+  </g>
+  <text x="158" y="306" class="t b">test</text><text x="158" y="328" class="t sm muted">activity 7.9</text>
+
+  <path d="M294 220 L347 220" class="arrow"/>
+
+  <!-- chemcheck core -->
+  <rect x="349" y="42" width="502" height="356" rx="24" class="core"/>
+  <g transform="translate(389 78)">
+    <path d="M0 17 L29 0 L58 17 L58 51 L29 68 L0 51 Z" fill="#fff" stroke="#6d5bd0" stroke-width="3"/>
+    <path d="M15 35 l10 10 20-25" class="check"/>
+  </g>
+  <text x="470" y="112" class="t brand">chemcheck</text>
+
+  <line x1="389" y1="166" x2="811" y2="166" stroke="#d8d1ff" stroke-width="2"/>
+
+  <g transform="translate(389 191)">
+    <rect width="214" height="55" rx="13" class="pill"/>
+    <path d="M19 29 l7 7 15-18" class="check" stroke-width="3.5"/>
+    <text x="55" y="26" class="t sh">Chemical integrity</text><text x="55" y="43" class="t sm muted">valid structures</text>
+  </g>
+  <g transform="translate(614 191)">
+    <rect width="197" height="55" rx="13" class="pill"/>
+    <rect x="18" y="17" width="20" height="20" rx="3" fill="none" stroke="#6d5bd0" stroke-width="2.5"/><rect x="26" y="25" width="20" height="20" rx="3" fill="none" stroke="#6d5bd0" stroke-width="2.5"/>
+    <text x="58" y="26" class="t sh">Duplicates</text><text x="58" y="43" class="t sm muted">identity and similarity</text>
+  </g>
+  <g transform="translate(389 258)">
+    <rect width="194" height="55" rx="13" class="pill"/>
+    <path d="M17 17 h30 M32 17 v25 M17 42 h30" fill="none" stroke="#6d5bd0" stroke-width="2.5"/>
+    <text x="55" y="26" class="t sh">Split leakage</text><text x="55" y="43" class="t sm muted">train ↔ test</text>
+  </g>
+  <g transform="translate(598 258)">
+    <rect width="213" height="55" rx="13" class="pill"/>
+    <path d="M18 41 L28 30 L36 35 L48 17" fill="none" stroke="#6d5bd0" stroke-width="2.5"/>
+    <text x="58" y="26" class="t sh">ML readiness</text><text x="58" y="43" class="t sm muted">labels and distributions</text>
+  </g>
+  <g transform="translate(493 325)">
+    <rect width="213" height="55" rx="13" class="pill"/>
+    <circle cx="22" cy="22" r="5" fill="none" stroke="#6d5bd0" stroke-width="2.5"/><circle cx="42" cy="34" r="5" fill="none" stroke="#6d5bd0" stroke-width="2.5"/><line x1="26" y1="25" x2="37" y2="31" stroke="#6d5bd0" stroke-width="2.5"/>
+    <text x="58" y="26" class="t sh">Chemical space</text><text x="58" y="43" class="t sm muted">coverage and bias</text>
+  </g>
+
+  <path d="M853 220 L905 220" class="arrow"/>
+
+  <!-- Actionable output -->
+  <rect x="907" y="67" width="251" height="306" rx="20" class="panel"/>
+  <text x="933" y="105" class="t sh">ACTIONABLE REPORT</text>
+
+  <rect x="933" y="153" width="64" height="26" rx="13" class="red"/><text x="965" y="171" text-anchor="middle" class="t sm" fill="#991b1b">ERROR</text>
+  <text x="1007" y="171" class="t b">split leakage</text>
+
+  <rect x="933" y="193" width="75" height="26" rx="13" class="amber"/><text x="970" y="211" text-anchor="middle" class="t sm" fill="#9a3412">WARNING</text>
+  <text x="1018" y="211" class="t b">duplicates</text>
+
+  <rect x="933" y="233" width="49" height="26" rx="13" class="blue"/><text x="957" y="251" text-anchor="middle" class="t sm" fill="#075985">INFO</text>
+  <text x="992" y="251" class="t b">domain gaps</text>
+
+  <line x1="933" y1="280" x2="1132" y2="280" stroke="#d8e0eb" stroke-width="2"/>
+  <text x="933" y="306" class="t sm">✓ affected row IDs</text>
+  <text x="933" y="328" class="t sm">✓ evidence</text>
+  <text x="933" y="350" class="t sm">✓ recommended action</text>
+
+</svg>

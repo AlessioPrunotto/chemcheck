@@ -6,6 +6,8 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
 -->
 
+![chemcheck turns molecular datasets into prioritized, evidence-backed findings across chemical integrity, duplicates, split leakage, ML readiness, and chemical-space coverage.](docs/assets/chemcheck-graphical-abstract.svg)
+
 One command to sanity-check a chemistry dataset before you train, publish, or trust it:
 
 ```bash
