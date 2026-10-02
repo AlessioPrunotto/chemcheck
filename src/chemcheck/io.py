@@ -1,4 +1,5 @@
 """Input loading: CSV/TSV/SDF/Parquet/Excel/JSONL + split handling."""
+
 from __future__ import annotations
 
 import os
@@ -6,12 +7,31 @@ import os
 import pandas as pd
 
 SMILES_CANDIDATES = [
-    "smiles", "canonical_smiles", "SMILES", "Smiles", "SMILES_CANONICAL",
-    "mol_smiles", "structure", "Structure", "molecule", "compound_smiles",
+    "smiles",
+    "canonical_smiles",
+    "SMILES",
+    "Smiles",
+    "SMILES_CANONICAL",
+    "mol_smiles",
+    "structure",
+    "Structure",
+    "molecule",
+    "compound_smiles",
 ]
 
 SPLIT_CANDIDATES = ["split", "Split", "SPLIT", "set", "fold", "subset"]
-ID_CANDIDATES = ["id", "ID", "Id", "name", "Name", "mol_id", "compound_id", "cid", "_sdf_name", "title"]
+ID_CANDIDATES = [
+    "id",
+    "ID",
+    "Id",
+    "name",
+    "Name",
+    "mol_id",
+    "compound_id",
+    "cid",
+    "_sdf_name",
+    "title",
+]
 LABEL_CANDIDATES = ["activity", "label", "target", "value", "pIC50", "pIC50_value", "y"]
 
 
@@ -37,11 +57,11 @@ def _guess_smiles_column(df: pd.DataFrame) -> str | None:
     except Exception:
         # without RDKit, fall back to first string column
         for c in df.columns:
-            if df[c].dtype == object:
+            if pd.api.types.is_string_dtype(df[c].dtype):
                 return c
         return None
     for c in df.columns:
-        if df[c].dtype != object:
+        if not pd.api.types.is_string_dtype(df[c].dtype):
             continue
         sample = df[c].dropna().astype(str).head(20).tolist()
         if not sample:
@@ -120,8 +140,10 @@ def _read_sdf(path: str) -> pd.DataFrame:
             smi = Chem.MolToSmiles(mol)
         except Exception:
             smi = ""
-        row = {"_sdf_name": mol.GetProp("_Name") if mol.HasProp("_Name") else f"mol_{i}",
-               "smiles": smi}
+        row = {
+            "_sdf_name": mol.GetProp("_Name") if mol.HasProp("_Name") else f"mol_{i}",
+            "smiles": smi,
+        }
         try:
             for k in mol.GetPropNames():
                 row[k] = mol.GetProp(k)
@@ -131,9 +153,15 @@ def _read_sdf(path: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _normalize(df: pd.DataFrame, smiles_col: str | None, id_col: str | None,
-               label_col: str | None, split_col: str | None,
-               split_value: str | None, allow_missing_label: bool = False) -> pd.DataFrame:
+def _normalize(
+    df: pd.DataFrame,
+    smiles_col: str | None,
+    id_col: str | None,
+    label_col: str | None,
+    split_col: str | None,
+    split_value: str | None,
+    allow_missing_label: bool = False,
+) -> pd.DataFrame:
     """Normalize a raw dataframe to chemcheck's internal schema.
 
     Adds `_row`, `_id`, `_smiles`, `_split`, and `_label` columns and
@@ -164,11 +192,21 @@ def _normalize(df: pd.DataFrame, smiles_col: str | None, id_col: str | None,
             "Pass --smiles-col explicitly."
         )
     if id_col is not None and id_col not in out.columns:
-        raise ValueError(f"--id-col '{id_col}' not found in columns {list(out.columns)[:20]}")
-    if label_col is not None and label_col not in out.columns and not allow_missing_label:
-        raise ValueError(f"--label-col '{label_col}' not found in columns {list(out.columns)[:20]}")
+        raise ValueError(
+            f"--id-col '{id_col}' not found in columns {list(out.columns)[:20]}"
+        )
+    if (
+        label_col is not None
+        and label_col not in out.columns
+        and not allow_missing_label
+    ):
+        raise ValueError(
+            f"--label-col '{label_col}' not found in columns {list(out.columns)[:20]}"
+        )
     if split_col is not None and split_col not in out.columns:
-        raise ValueError(f"--split-col '{split_col}' not found in columns {list(out.columns)[:20]}")
+        raise ValueError(
+            f"--split-col '{split_col}' not found in columns {list(out.columns)[:20]}"
+        )
     resolved_label_col = label_col if label_col in out.columns else None
 
     if id_col is None:
@@ -177,7 +215,9 @@ def _normalize(df: pd.DataFrame, smiles_col: str | None, id_col: str | None,
                 id_col = c
                 break
     out["_row"] = range(len(out))
-    out["_id"] = out[id_col].astype(str) if id_col else [f"row_{i}" for i in range(len(out))]
+    out["_id"] = (
+        out[id_col].astype(str) if id_col else [f"row_{i}" for i in range(len(out))]
+    )
     out["_smiles"] = out[smiles_col].astype(str).str.strip()
     out["_split"] = out[split_col].astype(str) if split_col else (split_value or None)
     out["_label"] = out[resolved_label_col] if resolved_label_col else None
@@ -188,9 +228,13 @@ def _normalize(df: pd.DataFrame, smiles_col: str | None, id_col: str | None,
     return out
 
 
-def load_table(paths: list[str], smiles_col: str | None = None,
-               id_col: str | None = None, label_col: str | None = None,
-               split_col: str | None = None) -> pd.DataFrame:
+def load_table(
+    paths: list[str],
+    smiles_col: str | None = None,
+    id_col: str | None = None,
+    label_col: str | None = None,
+    split_col: str | None = None,
+) -> pd.DataFrame:
     """Load one file, or two files as train/test splits.
 
     Args:
@@ -220,10 +264,24 @@ def load_table(paths: list[str], smiles_col: str | None = None,
         return norm
     elif len(paths) == 2:
         raw_a, raw_b = _read_single(paths[0]), _read_single(paths[1])
-        if label_col is not None and label_col not in raw_a.columns and label_col not in raw_b.columns:
+        if (
+            label_col is not None
+            and label_col not in raw_a.columns
+            and label_col not in raw_b.columns
+        ):
             raise ValueError(f"--label-col '{label_col}' not found in either input")
-        a = _normalize(raw_a, smiles_col, id_col, label_col, None, "train", allow_missing_label=True)
-        b = _normalize(raw_b, smiles_col, id_col, label_col, None, "test", allow_missing_label=True)
+        a = _normalize(
+            raw_a,
+            smiles_col,
+            id_col,
+            label_col,
+            None,
+            "train",
+            allow_missing_label=True,
+        )
+        b = _normalize(
+            raw_b, smiles_col, id_col, label_col, None, "test", allow_missing_label=True
+        )
         # align label col presence: if one side lacks labels it's fine
         if a.attrs.get("label_col") is None or b.attrs.get("label_col") is None:
             a["_label"] = a["_label"].astype(object)
@@ -236,8 +294,12 @@ def load_table(paths: list[str], smiles_col: str | None = None,
             left, right = a.attrs.get(key), b.attrs.get(key)
             merged.attrs[key] = left if left == right else [left, right]
         merged.attrs["input_columns"] = {
-            paths[0]: {key: a.attrs.get(key) for key in ("smiles_col", "id_col", "label_col")},
-            paths[1]: {key: b.attrs.get(key) for key in ("smiles_col", "id_col", "label_col")},
+            paths[0]: {
+                key: a.attrs.get(key) for key in ("smiles_col", "id_col", "label_col")
+            },
+            paths[1]: {
+                key: b.attrs.get(key) for key in ("smiles_col", "id_col", "label_col")
+            },
         }
         return merged
     raise ValueError("Pass 1 dataset file, or 2 files as train/test.")

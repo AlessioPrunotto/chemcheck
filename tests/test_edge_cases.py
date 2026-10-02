@@ -8,9 +8,19 @@ import pytest
 
 from chemcheck.checks import integrity, run_all
 from chemcheck.cli import _non_negative_float, _positive_int, _unit_interval, main
-from chemcheck.io import load_table
+from chemcheck.io import _guess_smiles_column, load_table
 from chemcheck.models import AuditReport, Finding, Severity
 from chemcheck.report import audit
+
+
+@pytest.mark.parametrize("dtype", ["object", "string"])
+def test_smiles_heuristic_accepts_string_dtypes(dtype):
+    frame = pd.DataFrame({
+        "measurement": [1.0, 2.0],
+        "fold": pd.Series(["train", "test"], dtype=dtype),
+        "compound": pd.Series([" CCO ", "CCN"], dtype=dtype),
+    })
+    assert _guess_smiles_column(frame) == "compound"
 
 
 def test_smiles_heuristic_and_generated_ids(tmp_path):
