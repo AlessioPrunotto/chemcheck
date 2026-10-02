@@ -6,9 +6,7 @@ chemistry and molecular-machine-learning projects.**
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/AlessioPrunotto/chemdatacheck/actions/workflows/ci.yml/badge.svg)](https://github.com/AlessioPrunotto/chemdatacheck/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/chemdatacheck.svg)](https://pypi.org/project/chemdatacheck/)
-<!-- Uncomment after the first GitHub release + Zenodo hookup:
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
--->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23106763.svg)](https://doi.org/10.5281/zenodo.23106763)
 
 ![ChemDataCheck turns molecular datasets into prioritized, evidence-backed findings across chemical integrity, duplicates, split leakage, ML readiness, and chemical-space coverage.](docs/assets/chemdatacheck-graphical-abstract.svg)
 

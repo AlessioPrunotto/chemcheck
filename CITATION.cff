@@ -8,6 +8,10 @@ authors:
     orcid: "https://orcid.org/0000-0002-6425-964X"
 repository-code: "https://github.com/AlessioPrunotto/chemdatacheck"
 url: "https://github.com/AlessioPrunotto/chemdatacheck"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23106764"
+    description: "ChemDataCheck 0.1.0 archived release"
 license: MIT
 version: 0.1.0
 date-released: "2026-10-02"

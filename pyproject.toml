@@ -34,6 +34,7 @@ Homepage = "https://github.com/AlessioPrunotto/chemdatacheck"
 Documentation = "https://github.com/AlessioPrunotto/chemdatacheck/blob/main/docs/tutorial.md"
 Repository = "https://github.com/AlessioPrunotto/chemdatacheck"
 Issues = "https://github.com/AlessioPrunotto/chemdatacheck/issues"
+DOI = "https://doi.org/10.5281/zenodo.23106763"
 Changelog = "https://github.com/AlessioPrunotto/chemdatacheck/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
