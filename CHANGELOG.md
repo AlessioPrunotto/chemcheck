@@ -1,14 +1,16 @@
 # Changelog
 
-All notable changes to chemcheck are documented here.
+All notable changes to ChemDataCheck are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [0.1.0] - 2026-10-02
+
+First public release as ChemDataCheck.
 
 ### Added
 - Explicit `--train-value` / `--test-value` split mapping, including one-option
   holdout-fold mode, plus warnings when split values cannot be interpreted.
-- Reproducibility metadata in reports: chemcheck/RDKit versions, audit settings,
+- Reproducibility metadata in reports: chemdatacheck/RDKit versions, audit settings,
   resolved columns, and SHA-256 hashes of inputs.
 - CLI `--version` and validation for thresholds and example limits.
 - Machine-readable approximation metadata at report and finding level.
@@ -53,12 +55,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Removed
 - Unused internal RDKit-availability and split-detection helpers.
 
-## [0.1.0] - 2026-09-11
-
-First public release.
-
-### Added
-- `chemcheck` CLI: audit CSV/TSV, SDF/SD, Parquet, Excel, JSON-lines datasets
+### Core capabilities
+- `chemdatacheck` CLI: audit CSV/TSV, SDF/SD, Parquet, Excel, JSON-lines datasets
   with SMILES-column autodetection; single-file (`--split-col`) and two-file
   train/test modes; terminal, JSON, HTML, and JUnit reports; pytest-like
   exit codes with `--fail-on`.
@@ -71,5 +69,5 @@ First public release.
   target shift, split-predicts-label, outliers), chemical space (rare
   elements/groups, rings, representation bias, applicability gaps).
 - Transparent 0–100 dataset quality score with per-check deduction breakdown.
-- Python API (`chemcheck.report.audit`) plus tutorial (`docs/tutorial.md`)
+- Python API (`chemdatacheck.report.audit`) plus tutorial (`docs/tutorial.md`)
   and three executed example notebooks (`examples/`).

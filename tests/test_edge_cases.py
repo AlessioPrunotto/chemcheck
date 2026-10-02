@@ -6,11 +6,11 @@ import argparse
 import pandas as pd
 import pytest
 
-from chemcheck.checks import integrity, run_all
-from chemcheck.cli import _non_negative_float, _positive_int, _unit_interval, main
-from chemcheck.io import _guess_smiles_column, load_table
-from chemcheck.models import AuditReport, Finding, Severity
-from chemcheck.report import audit
+from chemdatacheck.checks import integrity, run_all
+from chemdatacheck.cli import _non_negative_float, _positive_int, _unit_interval, main
+from chemdatacheck.io import _guess_smiles_column, load_table
+from chemdatacheck.models import AuditReport, Finding, Severity
+from chemdatacheck.report import audit
 
 
 @pytest.mark.parametrize("dtype", ["object", "string"])
@@ -82,7 +82,7 @@ def test_cli_numeric_parsers_reject_invalid_bounds(parser, value):
 def test_cli_error_and_file_report_formats(tmp_path, capsys):
     missing = tmp_path / "missing.csv"
     assert main([str(missing), "-q"]) == 2
-    assert "chemcheck error" in capsys.readouterr().err
+    assert "chemdatacheck error" in capsys.readouterr().err
 
     data = tmp_path / "molecules.csv"
     data.write_text("id,smiles\na,CCO\nb,CCN\n")

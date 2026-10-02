@@ -1,6 +1,6 @@
-# chemcheck: a pytest for molecular datasets
+# ChemDataCheck tutorial
 
-With this tutorial, you will learn how to install chemcheck, inspect a dataset,
+With this tutorial, you will learn how to install chemdatacheck, inspect a dataset,
 and configure an automated check that runs whenever the project changes.
 This tutorial focuses on short command-line examples.
 
@@ -17,29 +17,32 @@ In the notebooks, all data is generated inline with RDKit, therefore all noteboo
 
 ## 1. Install
 
-Chemcheck requires Python 3.10 or newer and is tested with Python 3.10–3.12.
-From the cloned repository, create an isolated environment and install the
-package. On macOS or Linux:
+ChemDataCheck requires Python 3.10 or newer and is tested with Python 3.10–3.12.
+Create an isolated environment and install the package from PyPI. On macOS or
+Linux:
 
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install ".[pretty]"
+python -m pip install "chemdatacheck[pretty]"
 ```
 
 The `pretty` option adds colored terminal output. You can replace the final
-command with `python -m pip install .` if you do not want it. Windows activation
+command with `python -m pip install chemdatacheck` if you do not want it. Windows activation
 instructions and the Conda fallback for systems without a compatible RDKit
 wheel are documented in the [README](../README.md#install).
 
 ## 2. Your first audit (60 seconds)
 
-The repository includes a deliberately problematic demo dataset. It contains examples of many chemcheck findings, including two invalid structures and several dataset-level problems involving otherwise valid molecules.
+Download the deliberately problematic demo dataset. It contains examples of
+many ChemDataCheck findings, including two invalid structures and several
+dataset-level problems involving otherwise valid molecules.
 
 ```bash
-chemcheck tests/fixtures/demo.csv --label-col activity --split-col split
+curl -LO https://raw.githubusercontent.com/AlessioPrunotto/chemdatacheck/main/tests/fixtures/demo.csv
+chemdatacheck demo.csv --label-col activity --split-col split
 ```
-`label-col`: tells chemcheck which column contains the target value (typically activity, pIC50, etc.). Given these values, chemcheck can monitor conflicting measurements, unusual values, etc. <br>
+`label-col`: tells chemdatacheck which column contains the target value (typically activity, pIC50, etc.). Given these values, chemdatacheck can monitor conflicting measurements, unusual values, etc. <br>
 `split-col`: the column which splits your data into training set and test set
 
 Your output will look like:
@@ -60,15 +63,15 @@ Dataset quality score: 39/100
 If you input two files, these will be automatically read as training set and test set (no `--split-col` needed):
 
 ```bash
-chemcheck train.csv test.csv --label-col activity
+chemdatacheck train.csv test.csv --label-col activity
 ```
 
 If your split column does not have explicit values "training", "test", but rather custom values, you can map
 them explicitly. For example, you can select which value of `fold` is
-associated to the test set, and chemcheck will automatically treats every other value as training set:
+associated to the test set, and chemdatacheck will automatically treats every other value as training set:
 
 ```bash
-chemcheck dataset.csv --split-col split --test-value 0
+chemdatacheck dataset.csv --split-col split --test-value 0
 ```
 
 Repeat `--train-value` or `--test-value` when multiple values belong to one
@@ -89,7 +92,7 @@ Every finding has the same anatomy:
 - **examples:** the evidence: molecule pairs, Tanimoto scores, shared scaffolds.
 - **recommendation:** what to do about it.
 - **score:** 0–100 with a printed deduction breakdown, so any score is auditable.
-  Weights live in `src/chemcheck/scoring.py` and every deduction scales with
+  Weights live in `src/chemdatacheck/scoring.py` and every deduction scales with
   prevalence: a handful of bad rows costs little, a systemic problem costs a lot.
 
 A warning should not be just a count for the user: it's meant to deliver relevant information.
@@ -111,12 +114,12 @@ Rule of thumb: re-audit after every fix. The score should improve every time a f
 
 ## 5. Python API cookbook
 
-You can also run chemcheck from Python instead of the command line. Pass the
+You can also run chemdatacheck from Python instead of the command line. Pass the
 input files as a list; one file is audited as a single dataset, while two files
 are treated as training and test data.
 
 ```python
-from chemcheck.report import audit, render_html, render_json
+from chemdatacheck.report import audit, render_html, render_json
 
 report = audit(["dataset.csv"], label_col="activity", split_col="split")
 print(report.score, f"{report.n_valid}/{report.n_total} valid")
@@ -162,7 +165,7 @@ these thresholds reports more pairs, so this configuration is **more
 sensitive**. Raising the same values will report fewer similar pairs.
 
 For repeated numeric measurements, `conflict_thresh` specifies how far apart
-the largest and smallest values for the same structure may be before chemcheck
+the largest and smallest values for the same structure may be before chemdatacheck
 reports a conflict. The value uses the same units as the label. Here, repeated
 pIC50 measurements are reported when their spread is greater than `0.5`:
 
@@ -197,9 +200,9 @@ are no error-level findings and `2` when at least one error is found. Use
 warning produces exit code `1` and an error produces exit code `2`.
 
 ```python
-from chemcheck.cli import main as chemcheck_main
+from chemdatacheck.cli import main as chemdatacheck_main
 
-exit_code = chemcheck_main(["dataset.csv", "--fail-on", "error", "--quiet"])
+exit_code = chemdatacheck_main(["dataset.csv", "--fail-on", "error", "--quiet"])
 raise SystemExit(exit_code)
 ```
 
@@ -215,19 +218,19 @@ shared with the dataset.
 
 ## 6. CI integration
 
-Run Chemcheck automatically whenever the repository changes. The following GitHub Actions step fails if dataset.sdf contains any error-level finding and writes a JUnit report that CI tools can display.
+Run ChemDataCheck automatically whenever the repository changes. The following GitHub Actions step fails if dataset.sdf contains any error-level finding and writes a JUnit report that CI tools can display.
 
 ```yaml
-# .github/workflows/chemcheck.yml
+# .github/workflows/chemdatacheck.yml
 - name: Audit dataset
-  run: chemcheck data/dataset.sdf --split-col split --fail-on error --format junit -o chemcheck.xml
+  run: chemdatacheck data/dataset.sdf --split-col split --fail-on error --format junit -o chemdatacheck.xml
 ```
 
 ## 7. FAQ
 
 **Is this a replacement for RDKit / MolVS / the ChEMBL curation pipeline?**
-No. chemcheck is built *on top* of RDKit. Standardizers fix molecules one at a time;
-chemcheck reasons across rows and splits (duplicates, leakage, shift).
+No. chemdatacheck is built *on top* of RDKit. Standardizers fix molecules one at a time;
+chemdatacheck reasons across rows and splits (duplicates, leakage, shift).
 Use both: standardize first, then audit.
 
 **How big a dataset can it handle?**
@@ -249,5 +252,5 @@ re-audit confirm the fix.
 
 **How do I cite / reference the report?**
 Export `--format json` (exact counts, row IDs, thresholds in one file) or the
-HTML report alongside the dataset. Both record the chemcheck version
+HTML report alongside the dataset. Both record the chemdatacheck version
 implicitly via the finding set. Pin the version in your environment.

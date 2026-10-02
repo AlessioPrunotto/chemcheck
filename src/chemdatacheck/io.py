@@ -162,7 +162,7 @@ def _normalize(
     split_value: str | None,
     allow_missing_label: bool = False,
 ) -> pd.DataFrame:
-    """Normalize a raw dataframe to chemcheck's internal schema.
+    """Normalize a raw dataframe to chemdatacheck's internal schema.
 
     Adds `_row`, `_id`, `_smiles`, `_split`, and `_label` columns and
     records resolved column names in `df.attrs`.

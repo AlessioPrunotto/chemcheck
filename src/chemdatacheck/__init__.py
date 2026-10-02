@@ -1,4 +1,4 @@
-"""chemcheck — pytest for molecular datasets."""
+"""chemdatacheck — pytest for molecular datasets."""
 from .models import AuditReport, CheckResult, Finding, Severity
 
 __all__ = ["AuditReport", "CheckResult", "Finding", "Severity"]

@@ -1,12 +1,12 @@
-# Contributing to chemcheck
+# Contributing to chemdatacheck
 
 Thanks for stopping by — issues and pull requests are welcome.
 
 ## Setup
 
-Chemcheck requires Python 3.10 or newer and is tested with Python 3.10–3.12.
+ChemDataCheck requires Python 3.10 or newer and is tested with Python 3.10–3.12.
 From a cloned copy of the repository, create an isolated environment and
-install chemcheck in editable mode with the testing and notebook dependencies:
+install chemdatacheck in editable mode with the testing and notebook dependencies:
 
 ```bash
 python3.11 -m venv .venv
@@ -26,8 +26,8 @@ If a compatible RDKit wheel is not available for your Python version or
 platform, use a Conda environment instead:
 
 ```bash
-conda create -n chemcheck-dev -c conda-forge python=3.11 rdkit pip
-conda activate chemcheck-dev
+conda create -n chemdatacheck-dev -c conda-forge python=3.11 rdkit pip
+conda activate chemdatacheck-dev
 python -m pip install -e ".[dev,notebooks]"
 ```
 
@@ -37,7 +37,7 @@ python -m pip install -e ".[dev,notebooks]"
 2. Keep changes focused; one PR per concern.
 3. Must-haves before a PR is merged:
    - Tests and branch coverage green
-     (`python -m pytest -q --cov=chemcheck --cov-report=term-missing`).
+     (`python -m pytest -q --cov=chemdatacheck --cov-report=term-missing`).
    - `ruff check` clean (config in `pyproject.toml`).
    - If you touched `src/`, add or update a test.
    - If you changed findings, scoring, or CLI output, re-execute the affected
@@ -52,7 +52,7 @@ python -m pip install -e ".[dev,notebooks]"
 
 ## Reporting bugs
 
-Please include: `chemcheck --version` (or commit hash), a minimal CSV/SDF
+Please include: `chemdatacheck --version` (or commit hash), a minimal CSV/SDF
 reproducing the issue, the full report (`--format json`), and what you
 expected instead.
 

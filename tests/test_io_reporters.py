@@ -5,9 +5,9 @@ from xml.etree import ElementTree
 import pandas as pd
 import pytest
 
-from chemcheck.io import load_table
-from chemcheck.models import AuditReport, Finding, Severity
-from chemcheck.report import render_html, render_json, render_junit
+from chemdatacheck.io import load_table
+from chemdatacheck.models import AuditReport, Finding, Severity
+from chemdatacheck.report import render_html, render_json, render_junit
 
 
 @pytest.mark.parametrize("extension", ["tsv", "txt", "jsonl", "json", "parquet", "xlsx"])

@@ -1,14 +1,16 @@
 cff-version: 1.2.0
-title: "chemcheck: pytest for molecular datasets"
-message: "If you use chemcheck in your research, please cite it as below."
+title: "ChemDataCheck: pytest for molecular datasets"
+message: "If you use ChemDataCheck in your research, please cite it as below."
 type: software
 authors:
   - family-names: Prunotto
     given-names: Alessio
     orcid: "https://orcid.org/0000-0002-6425-964X"
-repository-code: "https://github.com/AlessioPrunotto/chemcheck"
+repository-code: "https://github.com/AlessioPrunotto/chemdatacheck"
+url: "https://github.com/AlessioPrunotto/chemdatacheck"
 license: MIT
 version: 0.1.0
+date-released: "2026-10-02"
 keywords:
   - cheminformatics
   - molecular machine learning

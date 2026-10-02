@@ -118,7 +118,7 @@ def build_records(df: pd.DataFrame) -> list[MoleculeRecord]:
 
     Args:
         df: Normalized table with `_row`, `_id`, `_smiles`, `_split`,
-            and `_label` columns (see `chemcheck.io._normalize`).
+            and `_label` columns (see `chemdatacheck.io._normalize`).
 
     Returns:
         List of molecule records, one per input row.

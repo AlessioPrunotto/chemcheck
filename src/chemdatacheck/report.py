@@ -93,7 +93,7 @@ def audit(paths: list[str], smiles_col: str | None = None, id_col: str | None = 
     except Exception:
         rdkit_version = None
     meta = {
-        "chemcheck_version": __version__,
+        "chemdatacheck_version": __version__,
         "rdkit_version": rdkit_version,
         "source": df.attrs.get("source"),
         "input_sha256": _input_hashes(paths),
@@ -223,10 +223,10 @@ def render_html(report: AuditReport) -> str:
         f"<td><pre>{html.escape(json.dumps(f.examples[:3], indent=1)[:1500])}</pre></td></tr>"
         for f in report.findings)
     return f"""<!doctype html><html><head><meta charset="utf-8">
-<title>chemcheck report — score {report.score}/100</title>
+<title>ChemDataCheck report — score {report.score}/100</title>
 <style>body{{font-family:system-ui,sans-serif;margin:2em}}table{{border-collapse:collapse;width:100%}}
 td,th{{border:1px solid #ccc;padding:6px;vertical-align:top}}pre{{white-space:pre-wrap}}</style>
-</head><body><h1>chemcheck report — score {report.score}/100</h1>
+</head><body><h1>ChemDataCheck report — score {report.score}/100</h1>
 <p>{report.n_valid}/{report.n_total} valid molecules. Source: {html.escape(str(report.meta.get('source')))}</p>
 <table><tr><th>severity</th><th>finding</th><th>n</th><th>recommendation</th><th>examples</th></tr>
 {rows}</table></body></html>"""
@@ -246,13 +246,13 @@ def render_junit(report: AuditReport) -> str:
         status = "failed" if f.severity == Severity.ERROR else "warning"
         body = html.escape(f"{f.title} (n={f.count}). {f.recommendation} {f.details}"[:2000])
         if f.severity == Severity.ERROR:
-            cases.append(f'  <testcase classname="chemcheck" name="{f.check_id}">'
+            cases.append(f'  <testcase classname="chemdatacheck" name="{f.check_id}">'
                          f"<failure message=\"{html.escape(f.title)}\">{body}</failure></testcase>")
         else:
-            cases.append(f'  <testcase classname="chemcheck" name="{f.check_id}">'
+            cases.append(f'  <testcase classname="chemdatacheck" name="{f.check_id}">'
                          f"<system-out>{status}: {body}</system-out></testcase>")
     if not cases:
-        cases.append('  <testcase classname="chemcheck" name="all_checks_passed"/>')
+        cases.append('  <testcase classname="chemdatacheck" name="all_checks_passed"/>')
     n_fail = sum(1 for f in report.findings if f.severity == Severity.ERROR)
-    return (f'<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="chemcheck" '
+    return (f'<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="chemdatacheck" '
             f'tests="{len(cases)}" failures="{n_fail}">\n' + "\n".join(cases) + "\n</testsuite>\n")

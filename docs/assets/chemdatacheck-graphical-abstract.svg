@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-labelledby="title desc">
-  <title id="title">chemcheck graphical abstract</title>
-  <desc id="desc">A molecular dataset enters chemcheck, which audits chemical integrity, duplicates, split leakage, machine-learning readiness, and chemical-space coverage. It produces prioritized findings with affected row identifiers, evidence, and recommended actions for human review or continuous integration.</desc>
+  <title id="title">ChemDataCheck graphical abstract</title>
+  <desc id="desc">A molecular dataset enters chemdatacheck, which audits chemical integrity, duplicates, split leakage, machine-learning readiness, and chemical-space coverage. It produces prioritized findings with affected row identifiers, evidence, and recommended actions for human review or continuous integration.</desc>
   <defs>
     <style>
       .t{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;fill:#172033}.h{font-size:29px;font-weight:700}.brand{font-size:36px;font-weight:750}.sh{font-size:18px;font-weight:650}.b{font-size:15px}.sm{font-size:13px}.muted{fill:#64748b}.panel{fill:#fff;stroke:#d8e0eb;stroke-width:2}.core{fill:#f5f3ff;stroke:#b9a9ff;stroke-width:2}.row{fill:#f8fafc}.pill{fill:#fff;stroke:#d8e0eb;stroke-width:1.5}.arrow{stroke:#94a3b8;stroke-width:3;fill:none;marker-end:url(#arrow)}.bond{stroke:#334155;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.bond2{stroke:#334155;stroke-width:1.7;stroke-linecap:round}.check{fill:none;stroke:#6d5bd0;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}.red{fill:#fee2e2}.amber{fill:#ffedd5}.blue{fill:#e0f2fe}
@@ -37,13 +37,13 @@
 
   <path d="M294 220 L347 220" class="arrow"/>
 
-  <!-- chemcheck core -->
+  <!-- chemdatacheck core -->
   <rect x="349" y="42" width="502" height="356" rx="24" class="core"/>
   <g transform="translate(389 78)">
     <path d="M0 17 L29 0 L58 17 L58 51 L29 68 L0 51 Z" fill="#fff" stroke="#6d5bd0" stroke-width="3"/>
     <path d="M15 35 l10 10 20-25" class="check"/>
   </g>
-  <text x="470" y="112" class="t brand">chemcheck</text>
+  <text x="470" y="112" class="t brand">ChemDataCheck</text>
 
   <line x1="389" y1="166" x2="811" y2="166" stroke="#d8d1ff" stroke-width="2"/>
 

@@ -3,13 +3,13 @@ import json
 
 import pytest
 
-from chemcheck.checks import splits
-from chemcheck.cli import main as cli_main
-from chemcheck.io import load_table
-from chemcheck.models import Finding, Severity
-from chemcheck.molecules import build_records
-from chemcheck.report import audit
-from chemcheck.scoring import score_findings
+from chemdatacheck.checks import splits
+from chemdatacheck.cli import main as cli_main
+from chemdatacheck.io import load_table
+from chemdatacheck.models import Finding, Severity
+from chemdatacheck.molecules import build_records
+from chemdatacheck.report import audit
+from chemdatacheck.scoring import score_findings
 
 
 def _audit(tmp_path, text, **kw):
@@ -153,7 +153,7 @@ def test_cli_exit_codes_and_json(tmp_path):
     assert cli_main([str(p), "--format", "json", "--output", str(out), "-q"]) == 0
     data = json.loads(out.read_text())
     assert data["summary"]["n_total"] == 2 and "score" in data["summary"]
-    assert data["meta"]["chemcheck_version"] == "0.1.0"
+    assert data["meta"]["chemdatacheck_version"] == "0.1.0"
     assert data["meta"]["rdkit_version"]
     assert len(next(iter(data["meta"]["input_sha256"].values()))) == 64
     assert data["meta"]["settings"]["near_dup_thresh"] == 0.95

@@ -1,6 +1,6 @@
 # Validation maintainer notes
 
-This file is for the maintainers/reviewers of chemcheck's scientific
+This file is for the maintainers/reviewers of chemdatacheck's scientific
 validation. User-facing interpretation belongs in
 [`docs/validation.md`](../docs/validation.md).
 

@@ -1,7 +1,7 @@
 """Integrity checks."""
-from chemcheck.checks import integrity
-from chemcheck.io import load_table
-from chemcheck.molecules import build_records
+from chemdatacheck.checks import integrity
+from chemdatacheck.io import load_table
+from chemdatacheck.molecules import build_records
 
 
 def _recs(tmp_path, rows="id,smiles\n"):

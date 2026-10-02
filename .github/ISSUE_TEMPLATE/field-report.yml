@@ -1,0 +1,64 @@
+name: Field report
+description: Tell us what ChemDataCheck found on a real molecular dataset
+title: "[Field report]: "
+labels: ["field report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing ChemDataCheck. Please do not attach confidential datasets or molecule-level evidence that you cannot share publicly.
+  - type: input
+    id: version
+    attributes:
+      label: ChemDataCheck version
+      description: Run `chemdatacheck --version`.
+      placeholder: chemdatacheck 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: input_format
+    attributes:
+      label: Input format
+      options:
+        - CSV or TSV
+        - SDF or SD
+        - Parquet
+        - Excel
+        - JSON Lines
+        - Multiple formats
+    validations:
+      required: true
+  - type: input
+    id: dataset_size
+    attributes:
+      label: Approximate dataset size
+      placeholder: 5,000 rows
+    validations:
+      required: true
+  - type: textarea
+    id: useful_findings
+    attributes:
+      label: Which findings were useful?
+      description: Describe the check IDs or categories and why they helped.
+    validations:
+      required: true
+  - type: textarea
+    id: confusing_findings
+    attributes:
+      label: Which findings were confusing or unhelpful?
+      description: Include false positives, unclear evidence, or recommendations that need improvement.
+  - type: dropdown
+    id: reuse
+    attributes:
+      label: Would you use ChemDataCheck again?
+      options:
+        - "Yes"
+        - "Maybe"
+        - "No"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Share the type of task, platform, or command if it is safe to do so.

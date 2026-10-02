@@ -26,7 +26,7 @@ PUBCHEM_SEED = 20_260_924
 PUBCHEM_LIVE_COMPOUND_COUNT = 124_663_543
 PUBCHEM_CID_RANGE_MAX = PUBCHEM_LIVE_COMPOUND_COUNT
 PUBCHEM_POPULATION_DATE = "2026-09-06"
-USER_AGENT = "chemcheck-scientific-validation/0.1 (+https://github.com/AlessioPrunotto/chemcheck)"
+USER_AGENT = "chemdatacheck-scientific-validation/0.1 (+https://github.com/AlessioPrunotto/chemdatacheck)"
 
 
 @dataclass(frozen=True)

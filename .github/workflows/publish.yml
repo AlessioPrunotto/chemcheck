@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/chemcheck
+      url: https://test.pypi.org/p/chemdatacheck
     permissions:
       id-token: write
     steps:
@@ -90,7 +90,7 @@ jobs:
 
           version = "${{ needs.build.outputs.version }}"
           expected = {path.name for path in Path("built-dist").iterdir() if path.is_file()}
-          endpoint = f"https://test.pypi.org/pypi/chemcheck/{version}/json"
+          endpoint = f"https://test.pypi.org/pypi/chemdatacheck/{version}/json"
 
           for attempt in range(10):
               try:
@@ -119,8 +119,8 @@ jobs:
           test -n "$built_wheel"
           test -n "$testpypi_wheel"
           python -m pip install "$testpypi_wheel"
-          chemcheck --version
-          python -c 'import chemcheck; assert chemcheck.__version__ == "${{ needs.build.outputs.version }}"'
+          chemdatacheck --version
+          python -c 'import chemdatacheck; assert chemdatacheck.__version__ == "${{ needs.build.outputs.version }}"'
 
   publish-pypi:
     name: Publish release to PyPI
@@ -129,7 +129,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/chemcheck
+      url: https://pypi.org/p/chemdatacheck
     permissions:
       id-token: write
     steps:

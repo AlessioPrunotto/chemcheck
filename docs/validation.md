@@ -1,11 +1,11 @@
 # Scientific validation
 
-This page is for chemcheck users who want to understand what the checks have
+This page is for chemdatacheck users who want to understand what the checks have
 been tested on, how to interpret their results, and where the evidence stops.
 Instructions and decision records for reproducing or updating the study are in
 the [maintainer notes](../validation/MAINTAINERS.md).
 
-The study evaluates chemcheck as an **audit and triage tool**. It does not claim
+The study evaluates chemdatacheck as an **audit and triage tool**. It does not claim
 that every finding is a chemical error, or that the quality score is a validated
 scientific endpoint. The aim is to show that representative known defects can
 be detected, observe the checks on real public data, measure threshold
@@ -71,7 +71,7 @@ The study asks four practical questions:
 
 ### Detection of deliberately inserted defects
 
-To test whether Chemcheck can detect specific known problems, nine controlled defects were deliberately inserted into temporary copies of genuine public-dataset records.
+To test whether ChemDataCheck can detect specific known problems, nine controlled defects were deliberately inserted into temporary copies of genuine public-dataset records.
 
 | Scenario | Deliberate modification |
 |---|---|
@@ -85,10 +85,10 @@ To test whether Chemcheck can detect specific known problems, nine controlled de
 | Conflicting measurement | Repeated the same structure but changed its numeric label |
 | Identity leakage | Copied a training molecule into the test set |
 
-For each scenario, the validation required the corresponding Chemcheck finding to identify the deliberately inserted row. All nine inserted defects were detected.
+For each scenario, the validation required the corresponding ChemDataCheck finding to identify the deliberately inserted row. All nine inserted defects were detected.
 
 ### Findings on unmodified public data
-Here are the chemcheck results from the unmodified original datasets.
+Here are the chemdatacheck results from the unmodified original datasets.
 
 | Dataset | Invalid | Identity leakage | Cross-split Tc ≥ 0.95 | Test Tc ≥ 0.60 | Scaffold overlap |
 |---|---:|---:|---:|---:|---:|
@@ -139,7 +139,7 @@ prioritization heuristic, not a scientific ranking or publication gate.
 
 ### How to interpret the default similarity thresholds
 
-Chemcheck already applies these defaults; users do not need to set them for a
+ChemDataCheck already applies these defaults; users do not need to set them for a
 first audit:
 
 - `0.60` is the default warning threshold for a close train/test analogue.
@@ -227,7 +227,7 @@ subset on every change and schedule the full collection audit separately.
 ## Expected false positives and context-dependent alerts
 
 “False positive” here means “the pattern is real, but interpreting it as a
-dataset defect would be wrong.” Chemcheck intentionally reports several such
+dataset defect would be wrong.” ChemDataCheck intentionally reports several such
 review signals.
 
 | Finding | Legitimate explanation | Appropriate follow-up |
@@ -245,7 +245,7 @@ review signals.
 | Applicability gap | intentionally difficult probe of extrapolation | retain as a separate evaluation slice |
 | Representation bias | focused chemical series or an acyclic-heavy task is intentional | report domain limits and per-series performance |
 
-The PAINS-like patterns in chemcheck are especially narrow heuristic alerts.
+The PAINS-like patterns in chemdatacheck are especially narrow heuristic alerts.
 The literature explicitly warns that filters can label genuine compounds as
 artifacts and should prompt experimental follow-up rather than automatic
 exclusion
@@ -281,6 +281,6 @@ exclusion
 - The score weights and severity levels remain expert heuristics rather than a
   calibrated measure of dataset quality.
 
-Chemcheck should therefore be described as an evidence-producing audit tool,
+ChemDataCheck should therefore be described as an evidence-producing audit tool,
 not an automated curator. A domain expert must still decide whether a finding
 is an error, an intentional feature of the dataset, or uncertain.

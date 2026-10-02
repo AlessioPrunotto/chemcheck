@@ -52,7 +52,7 @@ an individual is officially representing the community in public spaces.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-https://github.com/AlessioPrunotto/chemcheck/issues
+https://github.com/AlessioPrunotto/chemdatacheck/issues
 (or directly to the maintainer via their GitHub profile).
 All complaints will be reviewed and investigated promptly and fairly.
 

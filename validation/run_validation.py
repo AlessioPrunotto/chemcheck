@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproducible scientific validation and scaling study for chemcheck.
+"""Reproducible scientific validation and scaling study for chemdatacheck.
 
 Downloads public MoleculeNet data and fixed ChEMBL/PubChem samples, runs
 natural-data audits, measures the sensitivity of the similarity thresholds,
@@ -29,9 +29,9 @@ from database_samples import (
     load_database_metadata,
 )
 
-from chemcheck.io import load_table
-from chemcheck.molecules import build_records
-from chemcheck.report import audit
+from chemdatacheck.io import load_table
+from chemdatacheck.molecules import build_records
+from chemdatacheck.report import audit
 
 
 @dataclass(frozen=True)
@@ -413,7 +413,7 @@ def main() -> int:
     if missing:
         parser.error(f"missing datasets {missing}; run with --download")
     import tempfile
-    with tempfile.TemporaryDirectory(prefix="chemcheck-validation-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="chemdatacheck-validation-") as temporary:
         work_dir = Path(temporary)
         summaries, findings = natural_audits(args.data_dir, work_dir)
         thresholds = threshold_sweep(args.data_dir, work_dir)

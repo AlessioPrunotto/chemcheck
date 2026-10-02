@@ -1,4 +1,4 @@
-"""CLI: chemcheck dataset.csv [test.csv] [options]. Exit codes pytest-like."""
+"""CLI: chemdatacheck dataset.csv [test.csv] [options]. Exit codes pytest-like."""
 from __future__ import annotations
 
 import argparse
@@ -38,13 +38,13 @@ def _non_negative_float(value: str) -> float:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the chemcheck argument parser.
+    """Build the chemdatacheck argument parser.
 
     Returns:
         Configured argument parser for the CLI.
     """
     p = argparse.ArgumentParser(
-        prog="chemcheck",
+        prog="chemdatacheck",
         description="pytest for molecular datasets — sanity checks for chemistry ML datasets.")
     p.add_argument("inputs", nargs="+",
                    help="one dataset file (CSV/TSV/SDF/Parquet/Excel/JSONL) or two files as train/test")
@@ -97,7 +97,7 @@ def exit_code_for(report: AuditReport, fail_on: str) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the chemcheck CLI.
+    """Run the chemdatacheck CLI.
 
     Args:
         argv: Argument list excluding the program name, or None to use
@@ -117,10 +117,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                        test_values=args.test_values,
                        conflict_thresh=args.conflict_thresh)
     except ImportError as e:
-        print(f"chemcheck error: {e}", file=sys.stderr)
+        print(f"chemdatacheck error: {e}", file=sys.stderr)
         return 2
     except (FileNotFoundError, ValueError) as e:
-        print(f"chemcheck error: {e}", file=sys.stderr)
+        print(f"chemdatacheck error: {e}", file=sys.stderr)
         return 2
     if args.fmt == "json":
         out = render_json(report)

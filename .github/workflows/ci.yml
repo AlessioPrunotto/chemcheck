@@ -20,7 +20,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
-          activate-environment: chemcheck-ci
+          activate-environment: chemdatacheck-ci
           channels: conda-forge
           channel-priority: strict
 
@@ -30,7 +30,7 @@ jobs:
           conda install -q -y python=${{ matrix.python }} rdkit pandas \
             scipy pyarrow openpyxl pip
 
-      - name: Install chemcheck (dev)
+      - name: Install chemdatacheck (dev)
         shell: bash -l {0}
         run: pip install -e ".[dev]"
 
@@ -52,7 +52,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
-          activate-environment: chemcheck-minimum
+          activate-environment: chemdatacheck-minimum
           channels: conda-forge
           channel-priority: strict
 
@@ -78,11 +78,11 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
-          activate-environment: chemcheck-coverage
+          activate-environment: chemdatacheck-coverage
           channels: conda-forge
           channel-priority: strict
 
-      - name: Install chemcheck
+      - name: Install chemdatacheck
         shell: bash -l {0}
         run: |
           conda install -q -y python=3.11 rdkit pandas scipy pyarrow openpyxl pip
@@ -90,7 +90,7 @@ jobs:
 
       - name: Run branch coverage
         shell: bash -l {0}
-        run: python -m pytest -q --cov=chemcheck --cov-report=term-missing --cov-report=xml
+        run: python -m pytest -q --cov=chemdatacheck --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage XML
         uses: actions/upload-artifact@v4
@@ -114,7 +114,7 @@ jobs:
       - name: Install and smoke-test the wheel
         run: |
           python -m pip install dist/*.whl
-          chemcheck --version
+          chemdatacheck --version
 
   notebooks:
     name: notebooks execute cleanly
@@ -126,7 +126,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-version: latest
-          activate-environment: chemcheck-ci
+          activate-environment: chemdatacheck-ci
           channels: conda-forge
           channel-priority: strict
 
@@ -136,7 +136,7 @@ jobs:
           conda install -q -y python=3.11 rdkit pandas \
             scipy pyarrow openpyxl pip jupyter
 
-      - name: Install chemcheck (notebooks)
+      - name: Install chemdatacheck (notebooks)
         shell: bash -l {0}
         run: pip install -e ".[dev,notebooks]"
 

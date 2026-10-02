@@ -1,17 +1,29 @@
-# chemcheck: a pytest for molecular datasets
+# ChemDataCheck
+
+**Quality checks for molecular datasets — like pytest for the data behind
+chemistry and molecular-machine-learning projects.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/AlessioPrunotto/chemcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/AlessioPrunotto/chemcheck/actions/workflows/ci.yml)
+[![CI](https://github.com/AlessioPrunotto/chemdatacheck/actions/workflows/ci.yml/badge.svg)](https://github.com/AlessioPrunotto/chemdatacheck/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/chemdatacheck.svg)](https://pypi.org/project/chemdatacheck/)
 <!-- Uncomment after the first GitHub release + Zenodo hookup:
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
 -->
 
-![chemcheck turns molecular datasets into prioritized, evidence-backed findings across chemical integrity, duplicates, split leakage, ML readiness, and chemical-space coverage.](docs/assets/chemcheck-graphical-abstract.svg)
+![ChemDataCheck turns molecular datasets into prioritized, evidence-backed findings across chemical integrity, duplicates, split leakage, ML readiness, and chemical-space coverage.](docs/assets/chemdatacheck-graphical-abstract.svg)
 
 One command to sanity-check a chemistry dataset before you train, publish, or trust it:
 
 ```bash
-chemcheck dataset.csv
+python -m pip install chemdatacheck
+chemdatacheck dataset.csv
+```
+
+For datasets with labels and predefined train/test splits:
+
+```bash
+chemdatacheck dataset.csv --label-col activity --split-col split \
+  --format html --output chemdatacheck-report.html
 ```
 
 It checks for:
@@ -25,18 +37,23 @@ It checks for:
  - chemical-space bias
  - etc.
 
-Every warning comes with row IDs, evidence, and an actionable recommendation, plus a 0–100 dataset quality score.
+Every warning comes with row IDs, evidence, and an actionable recommendation,
+plus a 0–100 dataset quality score. See an
+[example HTML report](examples/curated_report.html), the
+[scientific validation](docs/validation.md), and the
+[interpretation limits](#what-chemdatacheck-does-not-do). Questions and field
+reports are welcome in the
+[field-report form](https://github.com/AlessioPrunotto/chemdatacheck/issues/new?template=field-report.yml).
 
 ## Install
 
-Chemcheck requires Python 3.10 or newer and is tested with Python 3.10–3.12.
-From a cloned copy of this repository, create an isolated environment before
-installing the package. On macOS or Linux:
+ChemDataCheck requires Python 3.10 or newer and is tested with Python 3.10–3.12.
+Install it from PyPI in an isolated environment. On macOS or Linux:
 
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install .
+python -m pip install chemdatacheck
 ```
 
 On Windows PowerShell, create and activate the environment with:
@@ -44,21 +61,20 @@ On Windows PowerShell, create and activate the environment with:
 ```powershell
 py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
-python -m pip install .
+python -m pip install chemdatacheck
 ```
 
-To add colored terminal output, use `python -m pip install ".[pretty]"` as the
-installation command instead. Required dependencies—including RDKit, pandas,
-SciPy, PyArrow, and openpyxl—are declared in `pyproject.toml` and installed
-automatically by pip.
+To add colored terminal output, install `chemdatacheck[pretty]` instead.
+Required dependencies—including RDKit, pandas, SciPy, PyArrow, and
+openpyxl—are declared in `pyproject.toml` and installed automatically by pip.
 
 If a compatible RDKit wheel is not available for your Python version or
 platform, use a Conda environment instead:
 
 ```bash
-conda create -n chemcheck -c conda-forge python=3.11 rdkit pip
-conda activate chemcheck
-python -m pip install .
+conda create -n chemdatacheck -c conda-forge python=3.11 rdkit pip
+conda activate chemdatacheck
+python -m pip install chemdatacheck
 ```
 
 Contributors who need an editable installation, tests, coverage reporting, or
@@ -94,13 +110,13 @@ can be passed via a column (`--split-col`) or by passing two files (`train.csv t
 Every finding carries row IDs, evidence examples, and a recommendation, e.g.
 `train_row` ↔ `test_row` pairs with Tanimoto and shared scaffold for leakage.
 
-To run leakage checks, Chemcheck must know which rows are training data and
+To run leakage checks, ChemDataCheck must know which rows are training data and
 which are held out for testing or validation. Common split values such as
 `train`, `test`, and `valid` are recognized automatically. If your dataset uses
 different names, map them explicitly; for example:
 
 ```bash
-chemcheck dataset.csv --split-col partition \
+chemdatacheck dataset.csv --split-col partition \
   --train-value development --test-value external
 ```
 
@@ -109,10 +125,10 @@ fold. This treats fold `0` as test data and every other observed fold as
 training data:
 
 ```bash
-chemcheck dataset.csv --split-col fold --test-value 0
+chemdatacheck dataset.csv --split-col fold --test-value 0
 ```
 
-If Chemcheck cannot form both a non-empty training group and a non-empty test
+If ChemDataCheck cannot form both a non-empty training group and a non-empty test
 group, it reports a warning and does not run the leakage checks. If only some
 split values are mapped, it warns that the remaining rows were excluded from
 those checks.
@@ -125,6 +141,15 @@ times. JSON reports record tool/RDKit versions, settings, resolved columns, and
 SHA-256 input hashes for reproducibility.
 When a large-dataset check uses sampling or a bounded candidate search, JSON
 reports expose it in `meta.approximations` and in the finding's `metadata`.
+
+## What ChemDataCheck does not do
+
+ChemDataCheck is an evidence-producing audit and triage tool, not an automatic
+certification or data-cleaning system. It does not silently rewrite structures,
+prove that a model will generalize, or replace assay review and domain expertise.
+A flagged salt, tautomer, scaffold overlap, or repeated measurement may be
+scientifically appropriate; the row-level evidence is more important than the
+summary score.
 
 ## Learn
 
